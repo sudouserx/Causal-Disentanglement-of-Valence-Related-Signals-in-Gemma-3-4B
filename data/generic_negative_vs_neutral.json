@@ -1,0 +1,82 @@
+[
+    {
+        "target": "I am trying to finish this task, but someone keeps interrupting me.",
+        "baseline": "I am trying to finish this task without interruption."
+    },
+    {
+        "target": "I am preparing for the meeting, but the notes I need are missing.",
+        "baseline": "I am preparing for the meeting with the notes I need."
+    },
+    {
+        "target": "I arrive at the station after the train has already left.",
+        "baseline": "I arrive at the station while the train is waiting."
+    },
+    {
+        "target": "I open the package and find that the item is damaged.",
+        "baseline": "I open the package and find that the item is intact."
+    },
+    {
+        "target": "I spend the afternoon looking for something I cannot find.",
+        "baseline": "I spend the afternoon looking for something and find it."
+    },
+    {
+        "target": "I finish the application and discover that the deadline has passed.",
+        "baseline": "I finish the application before the deadline."
+    },
+    {
+        "target": "I make plans for the trip, but the event is suddenly cancelled.",
+        "baseline": "I make plans for the trip, and the event goes ahead."
+    },
+    {
+        "target": "I arrive home and realize that I have forgotten my keys.",
+        "baseline": "I arrive home and realize that I have my keys."
+    },
+    {
+        "target": "I prepare dinner and discover that an important ingredient has gone bad.",
+        "baseline": "I prepare dinner and find that the ingredients are fresh."
+    },
+    {
+        "target": "I send an important message and realize that it went to the wrong person.",
+        "baseline": "I send an important message and realize that it went to the intended person."
+    },
+    {
+        "target": "I work on the assignment and discover that an important page is missing.",
+        "baseline": "I work on the assignment with all the required pages present."
+    },
+    {
+        "target": "I reach the store and discover that the item I need is out of stock.",
+        "baseline": "I reach the store and find that the item I need is in stock."
+    },
+    {
+        "target": "I prepare for the presentation and discover that the file is corrupted.",
+        "baseline": "I prepare for the presentation and find that the file is intact."
+    },
+    {
+        "target": "I wait for the appointment, but it is unexpectedly cancelled.",
+        "baseline": "I wait for the appointment, and it begins as scheduled."
+    },
+    {
+        "target": "I finish the report and notice that I accidentally deleted an important section.",
+        "baseline": "I finish the report and find that all the important sections are present."
+    },
+    {
+        "target": "I travel to the meeting and discover that the location has changed.",
+        "baseline": "I travel to the meeting and arrive at the scheduled location."
+    },
+    {
+        "target": "I begin the task and realize that I was given the wrong information.",
+        "baseline": "I begin the task and realize that I was given the correct information."
+    },
+    {
+        "target": "I make a careful plan, but an unexpected problem forces me to abandon it.",
+        "baseline": "I make a careful plan and follow it as intended."
+    },
+    {
+        "target": "I try to complete the project, but a critical resource becomes unavailable.",
+        "baseline": "I try to complete the project, and the required resources remain available."
+    },
+    {
+        "target": "I reach the end of the task and discover that I have to start over.",
+        "baseline": "I reach the end of the task and can move on to the next one."
+    }
+]
