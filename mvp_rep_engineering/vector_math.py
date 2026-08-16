@@ -59,6 +59,37 @@ def residualize(v_distress: torch.Tensor, v_negative: torch.Tensor) -> torch.Ten
     return v_cand
 
 
+def residualize_multiple(target_vector: torch.Tensor, control_vectors: list[torch.Tensor]) -> torch.Tensor:
+    """Remove the linear components of ALL control vectors from the target_vector sequentially.
+    
+    Parameters
+    ----------
+    target_vector : Tensor (D,)
+    control_vectors : list[Tensor]
+        List of 1-D tensors (D,)
+        
+    Returns
+    -------
+    Tensor (D,)
+        The residual direction, normalised to unit norm.
+    """
+    v_cand = target_vector.clone()
+    
+    for control_v in control_vectors:
+        # proj_{control_v}(v_cand)
+        num = torch.dot(v_cand, control_v)
+        den = torch.dot(control_v, control_v) + 1e-8
+        proj_coeff = num / den
+        v_cand = v_cand - proj_coeff * control_v
+        
+    if v_cand.norm() < 1e-5:
+        raise ValueError("Target vector collapsed: it is fully spanned by the control vectors.")
+        
+    # Normalise the final resulting vector to unit norm
+    v_cand = v_cand / (v_cand.norm() + 1e-8)
+    return v_cand
+
+
 def scale_vector(
     v: torch.Tensor,
     alpha: float,

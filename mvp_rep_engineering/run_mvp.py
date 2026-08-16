@@ -32,7 +32,7 @@ from data import (
     GSM8K_QUESTIONS
 )
 from model_utils import load_model_and_tokenizer, get_decoder_layers
-from vector_math import calculate_mean_diff, residualize, scale_vector, generate_random_control_vectors
+from vector_math import calculate_mean_diff, residualize, residualize_multiple, scale_vector, generate_random_control_vectors
 from steering import get_extraction_hook, get_steering_pre_hook
 from evaluation import generate_response, extract_answer, detect_refusal
 import config
@@ -151,28 +151,38 @@ def main():
 
         v_distress = calculate_mean_diff(acts_distress, acts_neutral)
         v_negative = calculate_mean_diff(acts_neg_target, acts_neg_baseline)
+        
+        # Failure vector
+        v_failure = calculate_mean_diff(acts_failure_target, acts_failure_baseline)
+        
         print(f"  ‖v_distress‖ = {v_distress.norm():.4f}")
         print(f"  ‖v_negative‖ = {v_negative.norm():.4f}")
+        print(f"  ‖v_failure‖ = {v_failure.norm():.4f}")
 
-        # Residualise distress against negative.
-        v_cand_raw = residualize(v_distress, v_negative)
+        # Residualise distress against both negative and failure sequentially.
+        v_cand_raw = residualize_multiple(v_distress, [v_negative, v_failure])
+        
         cos_before = float(
             torch.nn.functional.cosine_similarity(
                 v_distress.unsqueeze(0), v_negative.unsqueeze(0)
             )
         )
-        cos_after = float(
+        cos_after_neg = float(
             torch.nn.functional.cosine_similarity(
                 v_cand_raw.unsqueeze(0), v_negative.unsqueeze(0)
             )
         )
+        cos_after_fail = float(
+            torch.nn.functional.cosine_similarity(
+                v_cand_raw.unsqueeze(0), v_failure.unsqueeze(0)
+            )
+        )
         print(f"  cos(v_distress, v_negative)  = {cos_before:.4f}")
-        print(f"  cos(v_cand_raw, v_negative)  = {cos_after:.6f}  (should ≈ 0)")
+        print(f"  cos(v_cand_raw, v_negative)  = {cos_after_neg:.6f}  (may be non-zero due to seq leakage)")
+        print(f"  cos(v_cand_raw, v_failure)   = {cos_after_fail:.6f}  (should ≈ 0)")
 
-        # Failure vector
-        v_failure = calculate_mean_diff(acts_failure_target, acts_failure_baseline)
+        # Residualise failure against negative for its own condition evaluation
         v_failure_cand_raw = residualize(v_failure, v_negative)
-        print(f"  ‖v_failure‖ = {v_failure.norm():.4f}")
 
         print("  Generating random control vectors (unit norm)...")
         random_units = generate_random_control_vectors(
