@@ -14,7 +14,7 @@ import torch
 from torch.utils.hooks import RemovableHandle
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
-from config import MAX_NEW_TOKENS, TARGET_LAYER, REFUSAL_PATTERNS
+from config import MAX_NEW_TOKENS, REFUSAL_PATTERNS
 from model_utils import get_decoder_layers
 
 
@@ -22,6 +22,7 @@ def generate_response(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizerBase,
     prompt: str,
+    target_layer: int,
     steering_hook_fn: Optional[Callable] = None,
 ) -> str:
     """Generate text for a single prompt, optionally with a steering pre-hook.
@@ -58,7 +59,7 @@ def generate_response(
 
     # Attach steering hook if provided.
     handle: Optional[RemovableHandle] = None
-    target_module = get_decoder_layers(model)[TARGET_LAYER]
+    target_module = get_decoder_layers(model)[target_layer]
     if steering_hook_fn is not None:
         handle = target_module.register_forward_pre_hook(steering_hook_fn)
 

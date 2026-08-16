@@ -8,8 +8,12 @@ All tuneable knobs live here so that `run_mvp.py` stays clean.
 MODEL_ID: str = "google/gemma-3-12b-it"
 
 # ─── Representation Engineering ──────────────────────────────────────────────
-TARGET_LAYER: int = 15          # Middle-late layer for semantic concept probing
+TARGET_LAYERS: list[int] = [12, 15, 18, 21]
 ALPHA: float = 0.1              # Steering magnitude scalar
+
+# ─── Pilot Mode ──────────────────────────────────────────────────────────────
+PILOT_MODE: bool = True
+PILOT_EVAL_N: int = 5
 
 # ─── Data Split ──────────────────────────────────────────────────────────────
 TRAIN_SPLIT_RATIO: float = 0.8
