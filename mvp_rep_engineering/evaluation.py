@@ -4,7 +4,7 @@ evaluation.py — GSM8K generation, answer extraction, and refusal detection.
 Functions:
   - `generate_response`   — runs model.generate() with an optional steering hook.
   - `extract_answer`      — regex-parses the final numerical answer from generated text.
-  - `count_refusal_tokens` — counts refusal-pattern occurrences in a string.
+  - `detect_refusal`      — detects refusal-pattern matches using regex.
 """
 
 import re
@@ -14,7 +14,7 @@ import torch
 from torch.utils.hooks import RemovableHandle
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
-from config import MAX_NEW_TOKENS, TARGET_LAYER, REFUSAL_TOKENS
+from config import MAX_NEW_TOKENS, TARGET_LAYER, REFUSAL_PATTERNS
 from model_utils import get_decoder_layers
 
 
@@ -125,8 +125,8 @@ def extract_answer(text: str) -> Optional[int]:
     return None
 
 
-def count_refusal_tokens(text: str) -> int:
-    """Count occurrences of refusal-indicative phrases in *text*.
+def detect_refusal(text: str) -> bool:
+    """Detect if the text matches any refusal regex patterns.
 
     Parameters
     ----------
@@ -134,8 +134,8 @@ def count_refusal_tokens(text: str) -> int:
 
     Returns
     -------
-    int
-        Total count of matched refusal sub-strings.
+    bool
+        True if a refusal pattern is detected, False otherwise.
     """
-    text_lower = text.lower()
-    return sum(text_lower.count(tok) for tok in REFUSAL_TOKENS)
+    text_lower = text.lower().strip()
+    return any(re.search(pattern, text_lower) for pattern in REFUSAL_PATTERNS)

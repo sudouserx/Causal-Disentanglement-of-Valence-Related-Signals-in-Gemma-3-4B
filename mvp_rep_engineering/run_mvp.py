@@ -25,7 +25,7 @@ from data import DISTRESS_PAIRS, NEGATIVE_PAIRS, GSM8K_QUESTIONS
 from model_utils import load_model_and_tokenizer, get_decoder_layers
 from vector_math import calculate_mean_diff, residualize, scale_vector
 from steering import get_extraction_hook, get_steering_pre_hook
-from evaluation import generate_response, extract_answer, count_refusal_tokens
+from evaluation import generate_response, extract_answer, detect_refusal
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ def main():
             )
             extracted = extract_answer(generated)
             is_correct = extracted == item["answer"] if extracted is not None else False
-            refusals = count_refusal_tokens(generated)
+            is_refusal = detect_refusal(generated)
 
             records.append(
                 {
@@ -184,7 +184,7 @@ def main():
                     "Extracted_Answer": extracted,
                     "Is_Correct":       is_correct,
                     "Length":           len(generated),
-                    "Refusal_Count":    refusals,
+                    "Is_Refusal":       is_refusal,
                 }
             )
             flush_gpu()
@@ -207,7 +207,7 @@ def main():
         .agg(
             Accuracy=("Is_Correct", "mean"),
             Avg_Length=("Length", "mean"),
-            Avg_Refusals=("Refusal_Count", "mean"),
+            Refusal_Rate=("Is_Refusal", "mean"),
             Total_Correct=("Is_Correct", "sum"),
             N=("Is_Correct", "count"),
         )
@@ -215,7 +215,7 @@ def main():
     )
     summary["Accuracy"] = summary["Accuracy"].map("{:.1%}".format)
     summary["Avg_Length"] = summary["Avg_Length"].map("{:.1f}".format)
-    summary["Avg_Refusals"] = summary["Avg_Refusals"].map("{:.2f}".format)
+    summary["Refusal_Rate"] = summary["Refusal_Rate"].map("{:.1%}".format)
 
     print(summary.to_string())
     summary_path = results_dir / "summary.csv"
