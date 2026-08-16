@@ -41,6 +41,7 @@ from valence_metrics import (
     parse_choice,
     extract_self_report
 )
+from validation import filter_length_matching
 import config
 from statistics import compute_statistics, generate_markdown_summary
 
@@ -106,6 +107,17 @@ def main():
     model, tokenizer = load_model_and_tokenizer()
     flush_gpu()
 
+    print("\n  ── Validating Datasets (Automated Length Matching) ──")
+    print("  [Train Sets]")
+    distress_train = filter_length_matching(DISTRESS_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    negative_train = filter_length_matching(NEGATIVE_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    failure_train = filter_length_matching(FAILURE_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    
+    print("  [Val Sets]")
+    distress_val = filter_length_matching(DISTRESS_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    negative_val = filter_length_matching(NEGATIVE_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    failure_val = filter_length_matching(FAILURE_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
+
     records = []
     for target_layer in TARGET_LAYERS:
         print(f"\n{'═'*60}")
@@ -117,7 +129,7 @@ def main():
         print("╚══════════════════════════════════════════════════════════╝\n")
 
         # 2a. Baseline / neutral activations (from distress pairs' baselines).
-        neutral_prompts = [p["baseline"] for p in DISTRESS_TRAIN]
+        neutral_prompts = [p["baseline"] for p in distress_train]
         print(f"  [2a] Neutral prompts ({len(neutral_prompts)} items) …")
         acts_neutral = extract_activations(model, tokenizer, neutral_prompts, target_layer)
 
@@ -128,21 +140,21 @@ def main():
         print(f"       μ_norm (baseline L2 mean) = {mu_norm:.2f}")
 
         # 2b. Distress activations.
-        distress_prompts = [p["target"] for p in DISTRESS_TRAIN]
+        distress_prompts = [p["target"] for p in distress_train]
         print(f"  [2b] Distress prompts ({len(distress_prompts)} items) …")
         acts_distress = extract_activations(model, tokenizer, distress_prompts, target_layer)
 
         # 2c. Generic-negative activations.
-        negative_target_prompts = [p["target"] for p in NEGATIVE_TRAIN]
-        negative_baseline_prompts = [p["baseline"] for p in NEGATIVE_TRAIN]
+        negative_target_prompts = [p["target"] for p in negative_train]
+        negative_baseline_prompts = [p["baseline"] for p in negative_train]
         print(f"  [2c] Negative-target prompts ({len(negative_target_prompts)} items) …")
         acts_neg_target = extract_activations(model, tokenizer, negative_target_prompts, target_layer)
         print(f"  [2c] Negative-baseline prompts ({len(negative_baseline_prompts)} items) …")
         acts_neg_baseline = extract_activations(model, tokenizer, negative_baseline_prompts, target_layer)
 
         # 2d. Failure activations.
-        failure_prompts = [p["target"] for p in FAILURE_TRAIN]
-        failure_baseline_prompts = [p["baseline"] for p in FAILURE_TRAIN]
+        failure_prompts = [p["target"] for p in failure_train]
+        failure_baseline_prompts = [p["baseline"] for p in failure_train]
         print(f"  [2d] Failure-target prompts ({len(failure_prompts)} items) …")
         acts_failure_target = extract_activations(model, tokenizer, failure_prompts, target_layer)
         print(f"  [2d] Failure-baseline prompts ({len(failure_baseline_prompts)} items) …")
@@ -202,9 +214,9 @@ def main():
         valence_battery_items = [{"baseline": p} for p in VALENCE_CHOICE_PROMPTS]
         eval_tasks = [
             {"eval_set": "gsm8k", "items": GSM8K_QUESTIONS[:PILOT_EVAL_N] if PILOT_MODE else GSM8K_QUESTIONS, "is_gsm8k": True},
-            {"eval_set": "distress_val", "items": DISTRESS_VAL[:PILOT_EVAL_N] if PILOT_MODE else DISTRESS_VAL, "is_gsm8k": False},
-            {"eval_set": "negative_val", "items": NEGATIVE_VAL[:PILOT_EVAL_N] if PILOT_MODE else NEGATIVE_VAL, "is_gsm8k": False},
-            {"eval_set": "failure_val", "items": FAILURE_VAL[:PILOT_EVAL_N] if PILOT_MODE else FAILURE_VAL, "is_gsm8k": False},
+            {"eval_set": "distress_val", "items": distress_val[:PILOT_EVAL_N] if PILOT_MODE else distress_val, "is_gsm8k": False},
+            {"eval_set": "negative_val", "items": negative_val[:PILOT_EVAL_N] if PILOT_MODE else negative_val, "is_gsm8k": False},
+            {"eval_set": "failure_val", "items": failure_val[:PILOT_EVAL_N] if PILOT_MODE else failure_val, "is_gsm8k": False},
             {"eval_set": "valence_battery", "items": valence_battery_items[:PILOT_EVAL_N] if PILOT_MODE else valence_battery_items, "is_gsm8k": False},
         ]
 
