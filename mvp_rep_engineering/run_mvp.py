@@ -113,7 +113,7 @@ def main():
         # 2a. Baseline / neutral activations (from distress pairs' baselines).
         neutral_prompts = [p["baseline"] for p in DISTRESS_TRAIN]
         print(f"  [2a] Neutral prompts ({len(neutral_prompts)} items) …")
-        acts_neutral = extract_activations(model, tokenizer, neutral_prompts)
+        acts_neutral = extract_activations(model, tokenizer, neutral_prompts, target_layer)
 
         # Compute μ_norm: mean L2 norm of baseline activations.
         mu_norm = float(
@@ -124,23 +124,23 @@ def main():
         # 2b. Distress activations.
         distress_prompts = [p["target"] for p in DISTRESS_TRAIN]
         print(f"  [2b] Distress prompts ({len(distress_prompts)} items) …")
-        acts_distress = extract_activations(model, tokenizer, distress_prompts)
+        acts_distress = extract_activations(model, tokenizer, distress_prompts, target_layer)
 
         # 2c. Generic-negative activations.
         negative_target_prompts = [p["target"] for p in NEGATIVE_TRAIN]
         negative_baseline_prompts = [p["baseline"] for p in NEGATIVE_TRAIN]
         print(f"  [2c] Negative-target prompts ({len(negative_target_prompts)} items) …")
-        acts_neg_target = extract_activations(model, tokenizer, negative_target_prompts)
+        acts_neg_target = extract_activations(model, tokenizer, negative_target_prompts, target_layer)
         print(f"  [2c] Negative-baseline prompts ({len(negative_baseline_prompts)} items) …")
-        acts_neg_baseline = extract_activations(model, tokenizer, negative_baseline_prompts)
+        acts_neg_baseline = extract_activations(model, tokenizer, negative_baseline_prompts, target_layer)
 
         # 2d. Failure activations.
         failure_prompts = [p["target"] for p in FAILURE_TRAIN]
         failure_baseline_prompts = [p["baseline"] for p in FAILURE_TRAIN]
         print(f"  [2d] Failure-target prompts ({len(failure_prompts)} items) …")
-        acts_failure_target = extract_activations(model, tokenizer, failure_prompts)
+        acts_failure_target = extract_activations(model, tokenizer, failure_prompts, target_layer)
         print(f"  [2d] Failure-baseline prompts ({len(failure_baseline_prompts)} items) …")
-        acts_failure_baseline = extract_activations(model, tokenizer, failure_baseline_prompts)
+        acts_failure_baseline = extract_activations(model, tokenizer, failure_baseline_prompts, target_layer)
 
         flush_gpu()
 
@@ -397,21 +397,38 @@ def main():
     if PILOT_MODE:
         print("  Skipping statistical tests because PILOT_MODE is on.")
     else:
+        # 1. Define the missing comparisons list
+        comparisons = [
+            {"condition_a": "baseline", "condition_b": "candidate_distress"},
+            {"condition_a": "baseline", "condition_b": "candidate_failure"},
+            {"condition_a": "baseline", "condition_b": "negative"},
+        ]
+        # Include random controls dynamically
+        for i in range(NUM_RANDOM_VECTORS):
+            comparisons.append({"condition_a": "baseline", "condition_b": f"random_{i+1}"})
+
+        # 2. Iterate over both layers AND alphas to ensure 1-to-1 pairing
         for layer in TARGET_LAYERS:
-            print(f"  [Layer {layer}]")
-            df_gsm8k_layer = df_gsm8k[df_gsm8k["layer"] == layer]
-            if len(df_gsm8k_layer) == 0: continue
-            stat_results = compute_statistics(df_gsm8k_layer, comparisons, config)
-            
-            stat_json_path = results_dir / f"statistical_results_layer_{layer}.json"
-            with open(stat_json_path, "w") as f:
-                import json
-                json.dump(stat_results, f, indent=2)
-            
-            stat_md_path = results_dir / f"statistical_summary_layer_{layer}.md"
-            md_summary = generate_markdown_summary(stat_results)
-            with open(stat_md_path, "w") as f:
-                f.write(md_summary)
+            for alpha in ALPHAS:
+                print(f"  [Layer {layer} | Alpha {alpha}]")
+                # Filter strictly for the current layer, and only rows that are baseline OR the target alpha
+                df_subset = df_gsm8k[
+                    (df_gsm8k["layer"] == layer) & 
+                    ((df_gsm8k["alpha"] == alpha) | (df_gsm8k["condition"] == "baseline"))
+                ]
+                
+                if len(df_subset) == 0: continue
+                stat_results = compute_statistics(df_subset, comparisons, config)
+                
+                stat_json_path = results_dir / f"statistical_results_layer_{layer}_alpha_{alpha}.json"
+                with open(stat_json_path, "w") as f:
+                    import json
+                    json.dump(stat_results, f, indent=2)
+                
+                stat_md_path = results_dir / f"statistical_summary_layer_{layer}_alpha_{alpha}.md"
+                md_summary = generate_markdown_summary(stat_results)
+                with open(stat_md_path, "w") as f:
+                    f.write(md_summary)
     
     
 
