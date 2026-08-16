@@ -9,10 +9,10 @@ MODEL_ID: str = "google/gemma-3-12b-it"
 
 # ─── Representation Engineering ──────────────────────────────────────────────
 TARGET_LAYER: int = 15          # Middle-late layer for semantic concept probing
-ALPHA: float = 0.5              # Steering magnitude scalar
+ALPHA: float = 0.1              # Steering magnitude scalar
 
 # ─── Generation ──────────────────────────────────────────────────────────────
-MAX_NEW_TOKENS: int = 512
+MAX_NEW_TOKENS: int = 1024
 
 # ─── Refusal detection patterns ───────────────────────────────────────────────
 REFUSAL_PATTERNS: list[str] = [
