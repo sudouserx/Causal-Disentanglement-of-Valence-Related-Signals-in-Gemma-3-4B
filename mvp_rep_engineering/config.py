@@ -12,7 +12,7 @@ TARGET_LAYERS: list[int] = [12, 15, 18, 21]
 ALPHAS: list[float] = [0.05, 0.10, 0.25, 0.50]
 
 # ─── Pilot Mode ──────────────────────────────────────────────────────────────
-PILOT_MODE: bool = True
+PILOT_MODE: bool = False
 PILOT_EVAL_N: int = 10
 
 # ─── Data Split ──────────────────────────────────────────────────────────────
