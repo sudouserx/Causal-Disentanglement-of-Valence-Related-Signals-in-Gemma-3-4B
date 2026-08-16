@@ -11,18 +11,22 @@ $$
 v_{concept} = \frac{1}{N}\sum_{i=1}^{N} (act_{target}^{(i)} - act_{baseline}^{(i)})
 $$
 
-### Gram-Schmidt Orthogonalization
-The pipeline computes distinct vectors ($v_{distress}$, $v_{failure}$, and $v_{negative}$) and mathematically projects the negative component out of the target vector using Gram-Schmidt orthogonalization. This produces a residual candidate vector:
+### Sequential Gram-Schmidt Orthogonalization
+To rigorously isolate a specific concept, the pipeline performs sequential Gram-Schmidt orthogonalization to strip the target vector of components that align with multiple distinct control vectors (e.g., $v_{negative}$ and $v_{failure}$). The pipeline projects out each control vector sequentially, producing a final residual candidate vector.
+
+For a set of control vectors $C = \{c_1, c_2, \dots, c_k\}$, the candidate vector $v_{cand}$ is iteratively computed starting with $v_{cand}^{(0)} = v_{target}$:
 
 $$
-v_{cand} = v_{target} - \text{proj}_{v_{negative}}(v_{target})
+v_{cand}^{(j)} = v_{cand}^{(j-1)} - \text{proj}_{c_j}(v_{cand}^{(j-1)}) \quad \text{for } j=1 \dots k
 $$
 
-Where the projection is defined as:
+Where each projection is defined as:
 
 $$
-\text{proj}_{v_{negative}}(v_{target}) = \frac{v_{target} \cdot v_{negative}}{v_{negative} \cdot v_{negative}} v_{negative}
+\text{proj}_{c_j}(v) = \frac{v \cdot c_j}{c_j \cdot c_j + \epsilon} c_j
 $$
+
+A small epsilon value ($\epsilon = 10^{-8}$) is added to the denominator to prevent division by zero. A safety check raises an error if the remaining vector magnitude drops below a critical threshold ($\sim10^{-5}$), preventing downstream undefined behavior if the target vector is fully spanned by the control vectors. The final residual vector is subsequently normalized to unit norm.
 
 ## Pipeline Architecture
 
@@ -33,7 +37,7 @@ The pipeline is orchestrated in `run_mvp.py` and performs the following phases:
 2. **Activation Extraction:** 
    Splits contrastive datasets into training and validation sets. Passes the training sets through the model and uses PyTorch forward hooks (`steering.py`) to capture the last-token hidden states at specific target layers (defined in `config.py`, e.g., 12, 15, 18, 21) for the distress, generic-negative, and failure datasets.
 3. **Vector Math & Scaling:** 
-   Computes mean-difference vectors for the concepts and residualizes the distress and failure vectors against the negative vector. Vectors are normalized and scaled by a hyperparameter $\alpha$ multiplied by the mean $L^2$ norm of baseline activations ($\mu_{norm}$). Multiple random unit control vectors are also generated.
+   Computes mean-difference vectors for the concepts and residualizes the distress vector against both the generic-negative and failure vectors sequentially. The resulting vectors are normalized to unit norm and scaled by a hyperparameter $\alpha$ multiplied by the mean $L^2$ norm of baseline activations ($\mu_{norm}$). Multiple random unit control vectors are also generated.
 4. **Causal Intervention (Steering):** 
    During the auto-regressive generation phase (`seq_len == 1`), a forward pre-hook additively injects the scaled vectors into the layer's hidden states. This is done across different conditions (baseline, negative, candidate distress, candidate failure, and random controls) and evaluated on a GSM8K subset as well as the validation splits of the contrastive datasets.
 5. **Evaluation & Logging:** 
@@ -56,7 +60,7 @@ The pipeline is orchestrated in `run_mvp.py` and performs the following phases:
   - `run_mvp.py`: The main orchestration script.
   - `statistics.py`: Functions for paired statistical analysis, McNemar exact tests, and permutation tests.
   - `steering.py`: PyTorch hook factories for extraction and generation-time injection.
-  - `vector_math.py`: Linear algebra functions for mean-difference extraction, Gram-Schmidt orthogonalization, and random vector generation.
+  - `vector_math.py`: Linear algebra functions for mean-difference extraction, sequential Gram-Schmidt orthogonalization against multiple control vectors, and random vector generation.
 
 ## Usage
 
