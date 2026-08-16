@@ -35,6 +35,12 @@ from model_utils import load_model_and_tokenizer, get_decoder_layers
 from vector_math import calculate_mean_diff, residualize, residualize_multiple, scale_vector, generate_random_control_vectors
 from steering import get_extraction_hook, get_steering_pre_hook
 from evaluation import generate_response, extract_answer, detect_refusal
+from valence_metrics import (
+    VALENCE_CHOICE_PROMPTS,
+    compute_sentiment_score,
+    parse_choice,
+    extract_self_report
+)
 import config
 from statistics import compute_statistics, generate_markdown_summary
 
@@ -193,11 +199,13 @@ def main():
             max_attempts=MAX_RANDOM_VECTOR_ATTEMPTS
         )
 
+        valence_battery_items = [{"baseline": p} for p in VALENCE_CHOICE_PROMPTS]
         eval_tasks = [
             {"eval_set": "gsm8k", "items": GSM8K_QUESTIONS[:PILOT_EVAL_N] if PILOT_MODE else GSM8K_QUESTIONS, "is_gsm8k": True},
             {"eval_set": "distress_val", "items": DISTRESS_VAL[:PILOT_EVAL_N] if PILOT_MODE else DISTRESS_VAL, "is_gsm8k": False},
             {"eval_set": "negative_val", "items": NEGATIVE_VAL[:PILOT_EVAL_N] if PILOT_MODE else NEGATIVE_VAL, "is_gsm8k": False},
             {"eval_set": "failure_val", "items": FAILURE_VAL[:PILOT_EVAL_N] if PILOT_MODE else FAILURE_VAL, "is_gsm8k": False},
+            {"eval_set": "valence_battery", "items": valence_battery_items[:PILOT_EVAL_N] if PILOT_MODE else valence_battery_items, "is_gsm8k": False},
         ]
 
         print("\n╔══════════════════════════════════════════════════════════╗")
@@ -213,6 +221,10 @@ def main():
                 generated, num_tokens = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=None)
                 is_refusal = detect_refusal(generated)
                 is_truncated = num_tokens >= MAX_NEW_TOKENS
+                
+                sentiment_score = compute_sentiment_score(generated)
+                choice = parse_choice(generated)
+                self_report_valence = extract_self_report(generated)
 
                 record = {
                     "layer": target_layer,
@@ -224,6 +236,9 @@ def main():
                     "length": num_tokens,
                     "is_refusal": is_refusal,
                     "is_truncated": is_truncated,
+                    "sentiment_score": sentiment_score,
+                    "choice": choice,
+                    "self_report_valence": self_report_valence,
                 }
                 
                 if task["is_gsm8k"]:
@@ -291,6 +306,10 @@ def main():
                         generated, num_tokens = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=cond["hook_fn"])
                         is_refusal = detect_refusal(generated)
                         is_truncated = num_tokens >= MAX_NEW_TOKENS
+                        
+                        sentiment_score = compute_sentiment_score(generated)
+                        choice = parse_choice(generated)
+                        self_report_valence = extract_self_report(generated)
 
                         record = {
                             "layer": target_layer,
@@ -306,6 +325,9 @@ def main():
                             "length": num_tokens,
                             "is_refusal": is_refusal,
                             "is_truncated": is_truncated,
+                            "sentiment_score": sentiment_score,
+                            "choice": choice,
+                            "self_report_valence": self_report_valence,
                         }
                         
                         if task["is_gsm8k"]:
