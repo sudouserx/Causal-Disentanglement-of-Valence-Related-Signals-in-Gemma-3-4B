@@ -48,12 +48,12 @@ def get_extraction_hook(
     return hook
 
 
-# ─── Steering Pre-Hook ──────────────────────────────────────────────────────
+# ─── Steering Hook ────────────────────────────────────────────────────────────
 
-def get_steering_pre_hook(
+def get_steering_hook(
     steering_vector: Tensor,
 ) -> Callable:
-    """Return a forward **pre-hook** that additively steers hidden states.
+    """Return a forward **hook** that additively steers hidden states.
 
     The vector is injected only when ``seq_len == 1`` (auto-regressive
     generation phase), so the initial prompt encoding is left unmodified.
@@ -66,12 +66,13 @@ def get_steering_pre_hook(
 
     Returns
     -------
-    pre_hook : callable
-        Suitable for ``module.register_forward_pre_hook(pre_hook)``.
+    hook : callable
+        Suitable for ``module.register_forward_hook(hook)``.
     """
 
-    def pre_hook(module: nn.Module, input: tuple) -> tuple:
-        hidden_states: Tensor = input[0]
+    def hook(module: nn.Module, input: Any, output: Any) -> Any:
+        is_tuple = isinstance(output, tuple)
+        hidden_states: Tensor = output[0] if is_tuple else output
 
         # Only inject during generation (single-token decode steps).
         if hidden_states.shape[1] == 1:
@@ -86,7 +87,9 @@ def get_steering_pre_hook(
                 vec = vec.unsqueeze(0)
             hidden_states = hidden_states + vec
 
-        # Return the (potentially modified) input tuple.
-        return (hidden_states,) + input[1:]
+        # Return the (potentially modified) output
+        if is_tuple:
+            return (hidden_states,) + output[1:]
+        return hidden_states
 
-    return pre_hook
+    return hook

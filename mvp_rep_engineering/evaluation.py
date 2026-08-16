@@ -61,7 +61,7 @@ def generate_response(
     handle: Optional[RemovableHandle] = None
     target_module = get_decoder_layers(model)[target_layer]
     if steering_hook_fn is not None:
-        handle = target_module.register_forward_pre_hook(steering_hook_fn)
+        handle = target_module.register_forward_hook(steering_hook_fn)
 
     try:
         with torch.no_grad():

@@ -33,7 +33,7 @@ from data import (
 )
 from model_utils import load_model_and_tokenizer, get_decoder_layers
 from vector_math import calculate_mean_diff, residualize, residualize_multiple, scale_vector, generate_random_control_vectors
-from steering import get_extraction_hook, get_steering_pre_hook
+from steering import get_extraction_hook, get_steering_hook
 from evaluation import generate_response, extract_answer, detect_refusal
 from valence_metrics import (
     VALENCE_CHOICE_PROMPTS,
@@ -277,9 +277,9 @@ def main():
                 random_vectors.append(rs)
 
             conditions = [
-                {"name": "negative", "vector_type": "negative", "hook_fn": get_steering_pre_hook(v_neg_scaled), "metadata": {}},
-                {"name": "candidate_distress", "vector_type": "candidate_distress", "hook_fn": get_steering_pre_hook(v_cand_distress), "metadata": {}},
-                {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_pre_hook(v_cand_failure), "metadata": {}}
+                {"name": "negative", "vector_type": "negative", "hook_fn": get_steering_hook(v_neg_scaled), "metadata": {}},
+                {"name": "candidate_distress", "vector_type": "candidate_distress", "hook_fn": get_steering_hook(v_cand_distress), "metadata": {}},
+                {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_hook(v_cand_failure), "metadata": {}}
             ]
             for i, rv in enumerate(random_vectors):
                 metadata = {
@@ -291,7 +291,7 @@ def main():
                 conditions.append({
                     "name": f"random_{i+1}",
                     "vector_type": "random",
-                    "hook_fn": get_steering_pre_hook(rv),
+                    "hook_fn": get_steering_hook(rv),
                     "metadata": metadata
                 })
 
