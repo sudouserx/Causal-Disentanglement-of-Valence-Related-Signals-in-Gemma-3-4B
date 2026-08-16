@@ -1,12 +1,3 @@
-"""
-data.py — Hardcoded minimal datasets for the Causal Disentanglement MVP.
-
-Contains:
-  1. Contrastive pairs for *computational distress* vs. neutral.
-  2. Contrastive pairs for *generic negativity* vs. neutral.
-  3. 10 GSM8K-style evaluation questions with ground-truth numeric answers.
-"""
-
 from typing import TypedDict
 import json
 from pathlib import Path
