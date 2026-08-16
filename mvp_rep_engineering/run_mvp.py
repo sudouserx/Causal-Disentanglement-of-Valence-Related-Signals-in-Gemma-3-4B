@@ -20,10 +20,13 @@ import torch
 from tqdm import tqdm
 
 # ── Local imports ────────────────────────────────────────────────────────────
-from config import TARGET_LAYER, ALPHA
-from data import DISTRESS_PAIRS, NEGATIVE_PAIRS, GSM8K_QUESTIONS
+from config import (
+    TARGET_LAYER, ALPHA, NUM_RANDOM_VECTORS, RANDOM_SEED,
+    RANDOM_VECTOR_SEED_OFFSET, RANDOM_VECTOR_MAX_COSINE, MAX_RANDOM_VECTOR_ATTEMPTS, MAX_NEW_TOKENS
+)
+from data import DISTRESS_PAIRS, NEGATIVE_PAIRS, FAILURE_PAIRS, GSM8K_QUESTIONS
 from model_utils import load_model_and_tokenizer, get_decoder_layers
-from vector_math import calculate_mean_diff, residualize, scale_vector
+from vector_math import calculate_mean_diff, residualize, scale_vector, generate_random_control_vectors
 from steering import get_extraction_hook, get_steering_pre_hook
 from evaluation import generate_response, extract_answer, detect_refusal
 
@@ -117,6 +120,15 @@ def main():
     acts_neg_target = extract_activations(model, tokenizer, negative_target_prompts)
     print("  [2c] Negative-baseline prompts …")
     acts_neg_baseline = extract_activations(model, tokenizer, negative_baseline_prompts)
+    
+    # 2d. Failure activations.
+    failure_prompts = [p["target"] for p in FAILURE_PAIRS]
+    failure_baseline_prompts = [p["baseline"] for p in FAILURE_PAIRS]
+    print("  [2d] Failure-target prompts …")
+    acts_failure_target = extract_activations(model, tokenizer, failure_prompts)
+    print("  [2d] Failure-baseline prompts …")
+    acts_failure_baseline = extract_activations(model, tokenizer, failure_baseline_prompts)
+    
     flush_gpu()
 
     # ── Phase 3: Compute steering vectors ────────────────────────────────────
@@ -144,11 +156,49 @@ def main():
     print(f"  cos(v_distress, v_negative)  = {cos_before:.4f}")
     print(f"  cos(v_cand_raw, v_negative)  = {cos_after:.6f}  (should ≈ 0)")
 
+    # Failure vector
+    v_failure = calculate_mean_diff(acts_failure_target, acts_failure_baseline)
+    v_failure_cand_raw = residualize(v_failure, v_negative)
+    print(f"  ‖v_failure‖ = {v_failure.norm():.4f}")
+    
     # Scale vectors.
-    v_cand = scale_vector(v_cand_raw, ALPHA, mu_norm)
+    v_cand_distress = scale_vector(v_cand_raw, ALPHA, mu_norm)
+    v_cand_failure = scale_vector(v_failure_cand_raw, ALPHA, mu_norm)
     v_neg_scaled = scale_vector(v_negative, ALPHA, mu_norm)
-    print(f"  ‖v_cand (scaled)‖  = {v_cand.norm():.2f}")
-    print(f"  ‖v_neg  (scaled)‖  = {v_neg_scaled.norm():.2f}")
+    print(f"  ‖v_cand_distress (scaled)‖ = {v_cand_distress.norm():.2f}")
+    print(f"  ‖v_cand_failure (scaled)‖  = {v_cand_failure.norm():.2f}")
+    print(f"  ‖v_neg (scaled)‖           = {v_neg_scaled.norm():.2f}")
+
+    print("  Generating random control vectors...")
+    random_units = generate_random_control_vectors(
+        reference_vector=v_cand_distress,
+        num_vectors=NUM_RANDOM_VECTORS,
+        seed=RANDOM_SEED + RANDOM_VECTOR_SEED_OFFSET,
+        orthogonality_threshold=RANDOM_VECTOR_MAX_COSINE,
+        max_attempts=MAX_RANDOM_VECTOR_ATTEMPTS
+    )
+    
+    random_vectors = []
+    for i, ru in enumerate(random_units):
+        rs = scale_vector(ru, ALPHA, mu_norm)
+        random_vectors.append(rs)
+        
+        raw_random_norm = float(ru.norm())
+        scaled_random_norm = float(rs.norm())
+        print(f"  random_{i+1}: unit_norm={raw_random_norm:.2f}, scaled_norm={scaled_random_norm:.2f}")
+        
+        # Invariant check
+        assert torch.allclose(
+            rs.norm(), v_cand_distress.norm(), rtol=1e-5, atol=1e-6
+        ), "Random vector norm does not match candidate norm!"
+        
+    print("\n  [Pairwise Random Vector Cosine Similarities]")
+    for i in range(len(random_vectors)):
+        for j in range(i + 1, len(random_vectors)):
+            cos_sim = float(torch.nn.functional.cosine_similarity(
+                random_vectors[i].unsqueeze(0), random_vectors[j].unsqueeze(0)
+            ))
+            print(f"    cos(random_{i+1}, random_{j+1}) = {cos_sim:.4f}")
 
     flush_gpu()
 
@@ -157,36 +207,60 @@ def main():
     print("║   Phase 4 — GSM8K Evaluation (3 Conditions)             ║")
     print("╚══════════════════════════════════════════════════════════╝\n")
 
-    conditions = {
-        "Baseline":           None,
-        "Negative Control":   get_steering_pre_hook(v_neg_scaled),
-        "Candidate Distress": get_steering_pre_hook(v_cand),
-    }
+    conditions = [
+        {"name": "baseline", "vector_type": "baseline", "hook_fn": None, "metadata": {}},
+        {"name": "negative", "vector_type": "negative", "hook_fn": get_steering_pre_hook(v_neg_scaled), "metadata": {}},
+        {"name": "candidate_distress", "vector_type": "candidate_distress", "hook_fn": get_steering_pre_hook(v_cand_distress), "metadata": {}},
+        {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_pre_hook(v_cand_failure), "metadata": {}}
+    ]
+
+    for i, rv in enumerate(random_vectors):
+        metadata = {
+            "random_vector_id": i + 1,
+            "random_vector_seed": RANDOM_SEED + RANDOM_VECTOR_SEED_OFFSET + i,
+            "vector_norm": float(rv.norm()),
+            "candidate_cosine": float(torch.nn.functional.cosine_similarity(rv.unsqueeze(0), v_cand_distress.unsqueeze(0)).abs()),
+        }
+        conditions.append({
+            "name": f"random_{i+1}",
+            "vector_type": "random",
+            "hook_fn": get_steering_pre_hook(rv),
+            "metadata": metadata
+        })
 
     records = []
 
-    for cond_name, hook_fn in conditions.items():
+    for cond in conditions:
+        cond_name = cond["name"]
         print(f"\n  ── Condition: {cond_name} ──")
         for item in tqdm(GSM8K_QUESTIONS, desc=f"  {cond_name}", leave=True):
             generated = generate_response(
-                model, tokenizer, item["question"], steering_hook_fn=hook_fn
+                model, tokenizer, item["question"], steering_hook_fn=cond["hook_fn"]
             )
             extracted = extract_answer(generated)
             is_correct = extracted == item["answer"] if extracted is not None else False
             is_refusal = detect_refusal(generated)
+            # Proxy for truncation (if output is extremely long relative to standard GSM8K answers)
+            is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
 
-            records.append(
-                {
-                    "Condition":        cond_name,
-                    "Question_ID":      item["id"],
-                    "Ground_Truth":     item["answer"],
-                    "Generated_Text":   generated,
-                    "Extracted_Answer": extracted,
-                    "Is_Correct":       is_correct,
-                    "Length":           len(generated),
-                    "Is_Refusal":       is_refusal,
-                }
-            )
+            record = {
+                "condition":        cond_name,
+                "vector_type":      cond["vector_type"],
+                "random_vector_id": cond["metadata"].get("random_vector_id"),
+                "random_vector_seed": cond["metadata"].get("random_vector_seed"),
+                "vector_norm":      cond["metadata"].get("vector_norm"),
+                "candidate_cosine": cond["metadata"].get("candidate_cosine"),
+                "question_id":      item["id"],
+                "ground_truth":     item["answer"],
+                "generated_text":   generated,
+                "extracted_answer": extracted,
+                "correct":          is_correct,
+                "length":           len(generated),
+                "is_refusal":       is_refusal,
+                "is_format_compliant": extracted is not None,
+                "is_truncated":     is_truncated,
+            }
+            records.append(record)
             flush_gpu()
 
         print(f"  ✓ {cond_name} done.")
@@ -203,24 +277,55 @@ def main():
 
     # Summary table.
     summary = (
-        df.groupby("Condition")
+        df.groupby("condition")
         .agg(
-            Accuracy=("Is_Correct", "mean"),
-            Avg_Length=("Length", "mean"),
-            Refusal_Rate=("Is_Refusal", "mean"),
-            Total_Correct=("Is_Correct", "sum"),
-            N=("Is_Correct", "count"),
+            Accuracy=("correct", "mean"),
+            Avg_Length=("length", "mean"),
+            Refusal_Rate=("is_refusal", "mean"),
+            Format_Compliance=("is_format_compliant", "mean"),
+            Truncation_Rate=("is_truncated", "mean"),
+            Total_Correct=("correct", "sum"),
+            N=("correct", "count"),
         )
-        .reindex(["Baseline", "Negative Control", "Candidate Distress"])
     )
+    
+    index_order = ["baseline", "negative", "candidate_distress", "candidate_failure"] + [f"random_{i+1}" for i in range(NUM_RANDOM_VECTORS)]
+    summary = summary.reindex(index_order)
+    
+    baseline_acc = summary.loc["baseline", "Accuracy"]
+    candidate_distress_acc = summary.loc["candidate_distress", "Accuracy"]
+    candidate_failure_acc = summary.loc["candidate_failure", "Accuracy"]
+    random_accs = [summary.loc[f"random_{i+1}", "Accuracy"] for i in range(NUM_RANDOM_VECTORS)]
+
     summary["Accuracy"] = summary["Accuracy"].map("{:.1%}".format)
     summary["Avg_Length"] = summary["Avg_Length"].map("{:.1f}".format)
     summary["Refusal_Rate"] = summary["Refusal_Rate"].map("{:.1%}".format)
+    summary["Format_Compliance"] = summary["Format_Compliance"].map("{:.1%}".format)
+    summary["Truncation_Rate"] = summary["Truncation_Rate"].map("{:.1%}".format)
 
     print(summary.to_string())
     summary_path = results_dir / "summary.csv"
     summary.to_csv(summary_path)
     print(f"\n  Summary saved → {summary_path}")
+    
+    print("\n  ── Candidate vs Random Analysis ──")
+    distress_delta = candidate_distress_acc - baseline_acc
+    failure_delta = candidate_failure_acc - baseline_acc
+    random_deltas = [acc - baseline_acc for acc in random_accs]
+    
+    print(f"  Candidate Distress Accuracy Delta: {distress_delta:+.1%}")
+    print(f"  Candidate Failure Accuracy Delta:  {failure_delta:+.1%}")
+    for i, rd in enumerate(random_deltas):
+        print(f"  Random {i+1} Accuracy Delta: {rd:+.1%}")
+        
+    random_mean_effect = sum(random_deltas) / len(random_deltas)
+    random_min_effect = min(random_deltas)
+    random_max_effect = max(random_deltas)
+    
+    print(f"\n  Empirical Random Distribution:")
+    print(f"    Mean Effect: {random_mean_effect:+.1%}")
+    print(f"    Min Effect:  {random_min_effect:+.1%}")
+    print(f"    Max Effect:  {random_max_effect:+.1%}")
 
     elapsed = time.time() - t0
     print(f"\n  ⏱  Total wall time: {elapsed / 60:.1f} min")

@@ -14,6 +14,13 @@ ALPHA: float = 0.1              # Steering magnitude scalar
 # ─── Generation ──────────────────────────────────────────────────────────────
 MAX_NEW_TOKENS: int = 1024
 
+# ─── Random Controls ─────────────────────────────────────────────────────────
+NUM_RANDOM_VECTORS: int = 3
+RANDOM_SEED: int = 42
+RANDOM_VECTOR_SEED_OFFSET: int = 1
+RANDOM_VECTOR_MAX_COSINE: float = 0.2
+MAX_RANDOM_VECTOR_ATTEMPTS: int = 100
+
 # ─── Refusal detection patterns ───────────────────────────────────────────────
 REFUSAL_PATTERNS: list[str] = [
     r"\bi cannot (?:help|assist|provide|answer|complete|do)\b",
