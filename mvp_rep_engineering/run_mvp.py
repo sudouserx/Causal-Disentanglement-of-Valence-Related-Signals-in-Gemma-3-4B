@@ -22,7 +22,7 @@ from tqdm import tqdm
 # ── Local imports ────────────────────────────────────────────────────────────
 from config import TARGET_LAYER, ALPHA
 from data import DISTRESS_PAIRS, NEGATIVE_PAIRS, GSM8K_QUESTIONS
-from model_utils import load_model_and_tokenizer
+from model_utils import load_model_and_tokenizer, get_decoder_layers
 from vector_math import calculate_mean_diff, residualize, scale_vector
 from steering import get_extraction_hook, get_steering_pre_hook
 from evaluation import generate_response, extract_answer, count_refusal_tokens
@@ -50,7 +50,7 @@ def extract_activations(model, tokenizer, prompts: list[str]) -> list[torch.Tens
         One (1, D) CPU tensor per prompt.
     """
     storage: list[torch.Tensor] = []
-    target_module = model.model.layers[TARGET_LAYER]
+    target_module = get_decoder_layers(model)[TARGET_LAYER]
     handle = target_module.register_forward_hook(get_extraction_hook(storage))
 
     try:

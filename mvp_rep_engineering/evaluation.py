@@ -15,6 +15,7 @@ from torch.utils.hooks import RemovableHandle
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
 from config import MAX_NEW_TOKENS, TARGET_LAYER, REFUSAL_TOKENS
+from model_utils import get_decoder_layers
 
 
 def generate_response(
@@ -57,7 +58,7 @@ def generate_response(
 
     # Attach steering hook if provided.
     handle: Optional[RemovableHandle] = None
-    target_module = model.model.layers[TARGET_LAYER]
+    target_module = get_decoder_layers(model)[TARGET_LAYER]
     if steering_hook_fn is not None:
         handle = target_module.register_forward_pre_hook(steering_hook_fn)
 

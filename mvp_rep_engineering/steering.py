@@ -38,8 +38,9 @@ def get_extraction_hook(
     """
 
     def hook(module: nn.Module, input: Any, output: Any) -> None:
-        # Gemma3DecoderLayer returns a tuple: (hidden_states, …)
-        hidden_states: Tensor = output[0]
+        # Gemma3DecoderLayer returns hidden_states as a plain Tensor,
+        # but some configs (output_attentions=True) may return a tuple.
+        hidden_states: Tensor = output[0] if isinstance(output, tuple) else output
         # Grab the last sequence-position activation, detach and move to CPU.
         last_token_act = hidden_states[:, -1, :].detach().cpu()
         storage.append(last_token_act)

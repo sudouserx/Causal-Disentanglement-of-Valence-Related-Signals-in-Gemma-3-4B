@@ -53,3 +53,26 @@ def load_model_and_tokenizer() -> tuple[PreTrainedModel, PreTrainedTokenizerBase
 
     print("[model_utils] Model and tokenizer loaded successfully.")
     return model, tokenizer
+
+
+def get_decoder_layers(model) -> torch.nn.ModuleList:
+    """Return the ModuleList of decoder layers, handling Gemma 3's nested architecture.
+
+    Gemma 3 multimodal (Gemma3ForConditionalGeneration):
+        model.model → Gemma3Model (vision + language composite)
+        model.model.language_model → Gemma3TextModel (has .layers)
+
+    Gemma 3 text-only (Gemma3ForCausalLM):
+        model.model → Gemma3TextModel (has .layers directly)
+
+    Returns
+    -------
+    torch.nn.ModuleList
+        The list of Gemma3DecoderLayer modules.
+    """
+    inner = model.model
+    # Multimodal wrapper: layers are inside .language_model
+    if hasattr(inner, "language_model"):
+        return inner.language_model.layers
+    # Text-only model: layers are directly on .model
+    return inner.layers
