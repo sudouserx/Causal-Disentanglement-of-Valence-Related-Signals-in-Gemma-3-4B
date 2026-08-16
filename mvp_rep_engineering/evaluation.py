@@ -24,7 +24,7 @@ def generate_response(
     prompt: str,
     target_layer: int,
     steering_hook_fn: Optional[Callable] = None,
-) -> str:
+) -> tuple[str, int]:
     """Generate text for a single prompt, optionally with a steering pre-hook.
 
     Parameters
@@ -40,8 +40,8 @@ def generate_response(
 
     Returns
     -------
-    str
-        The decoded generated text (response only, prompt stripped).
+    tuple[str, int]
+        The decoded generated text (response only, prompt stripped) and the number of generated tokens.
     """
     # Wrap in Gemma-3 chat template (no native system role — embed in user turn).
     system_prefix = (
@@ -79,7 +79,9 @@ def generate_response(
 
     # Decode only the generated tokens.
     generated_ids = output_ids[0, input_len:]
-    return tokenizer.decode(generated_ids, skip_special_tokens=True)
+    generated_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
+    num_tokens = len(generated_ids)
+    return generated_text, num_tokens
 
 
 def extract_answer(text: str) -> Optional[int]:

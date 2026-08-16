@@ -200,9 +200,9 @@ def main():
             eval_set = task["eval_set"]
             for i, item in enumerate(tqdm(task["items"], desc=f"  baseline [{eval_set}]", leave=True)):
                 prompt = item["question"] if task["is_gsm8k"] else item["baseline"]
-                generated = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=None)
+                generated, num_tokens = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=None)
                 is_refusal = detect_refusal(generated)
-                is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
+                is_truncated = num_tokens >= MAX_NEW_TOKENS
 
                 record = {
                     "layer": target_layer,
@@ -211,7 +211,7 @@ def main():
                     "condition": "baseline",
                     "vector_type": "baseline",
                     "generated_text": generated,
-                    "length": len(generated),
+                    "length": num_tokens,
                     "is_refusal": is_refusal,
                     "is_truncated": is_truncated,
                 }
@@ -278,9 +278,9 @@ def main():
                     eval_set = task["eval_set"]
                     for i, item in enumerate(tqdm(task["items"], desc=f"  {cond_name} [{eval_set}]", leave=True)):
                         prompt = item["question"] if task["is_gsm8k"] else item["baseline"]
-                        generated = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=cond["hook_fn"])
+                        generated, num_tokens = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=cond["hook_fn"])
                         is_refusal = detect_refusal(generated)
-                        is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
+                        is_truncated = num_tokens >= MAX_NEW_TOKENS
 
                         record = {
                             "layer": target_layer,
@@ -293,7 +293,7 @@ def main():
                             "vector_norm": cond["metadata"].get("vector_norm"),
                             "candidate_cosine": cond["metadata"].get("candidate_cosine"),
                             "generated_text": generated,
-                            "length": len(generated),
+                            "length": num_tokens,
                             "is_refusal": is_refusal,
                             "is_truncated": is_truncated,
                         }
