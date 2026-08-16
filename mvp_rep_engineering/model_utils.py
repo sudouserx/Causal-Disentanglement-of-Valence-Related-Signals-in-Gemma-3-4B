@@ -32,14 +32,14 @@ def load_model_and_tokenizer() -> tuple[PreTrainedModel, PreTrainedTokenizerBase
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float32,
+        bnb_4bit_compute_dtype=torch.float16,
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         quantization_config=bnb_config,
         device_map="auto",
-        dtype=torch.float32,
+        dtype=torch.float16,
     )
     model.eval()
 

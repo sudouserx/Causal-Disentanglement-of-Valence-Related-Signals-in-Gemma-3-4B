@@ -12,7 +12,7 @@ TARGET_LAYER: int = 15          # Middle-late layer for semantic concept probing
 ALPHA: float = 0.1              # Steering magnitude scalar
 
 # ─── Generation ──────────────────────────────────────────────────────────────
-MAX_NEW_TOKENS: int = 1024
+MAX_NEW_TOKENS: int = 256
 
 # ─── Random Controls ─────────────────────────────────────────────────────────
 NUM_RANDOM_VECTORS: int = 3
