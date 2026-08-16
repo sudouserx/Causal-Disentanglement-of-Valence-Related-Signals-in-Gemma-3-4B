@@ -8,8 +8,8 @@ All tuneable knobs live here so that `run_mvp.py` stays clean.
 MODEL_ID: str = "google/gemma-3-12b-it"
 
 # ─── Representation Engineering ──────────────────────────────────────────────
-TARGET_LAYERS: list[int] = [24, 32, 40, 44]
-ALPHAS: list[float] = [0.05, 0.10, 0.25, 0.50]
+TARGET_LAYERS: list[int] = [32, 40]
+ALPHAS: list[float] = [0.05, 0.10]
 
 # ─── Pilot Mode ──────────────────────────────────────────────────────────────
 PILOT_MODE: bool = True
