@@ -1,22 +1,18 @@
 # Causal Disentanglement of Valence-Related Signals in Gemma-3
 
-This project provides a PyTorch-based Minimum Viable Product (MVP) designed to extract, isolate, and evaluate specific internal representations in the `google/gemma-3-12b-it` model. It focuses on isolating concepts such as "computational distress" and "failure difficulty" from a "generic negative sentiment" concept using Representation Engineering (RepE) techniques, and features rigorous statistical evaluation using paired random control vectors.
+This project provides a PyTorch-based pipeline that extracts, isolates, and evaluates internal representations in the `google/gemma-3-12b-it` model. It extracts concept vectors for "computational distress" and "failure difficulty," orthogonalizes them against a "generic negative sentiment" vector, and applies these vectors during text generation. The pipeline evaluates the model's responses under these different vector interventions using paired random control vectors.
 
 ## Theoretical Background
 
 ### Representation Engineering via Contrastive Pairs
-Large Language Models process tokens through sequential layers, building internal representations of concepts. We isolate the direction of a specific concept in the model's activation space by utilizing contrastive prompting.
-
-By supplying the model with pairs of prompts—one eliciting the target concept and one acting as a neutral baseline—we extract the internal hidden states. The concept vector is approximated as the mean difference of these activations at a specific layer:
+The pipeline extracts the direction of a specific concept in the model's activation space by supplying the model with pairs of prompts (a target and a baseline). It extracts the internal hidden states for these prompts and computes the concept vector as the mean difference of these activations at a specific layer:
 
 $$
 v_{concept} = \frac{1}{N}\sum_{i=1}^{N} (act_{target}^{(i)} - act_{baseline}^{(i)})
 $$
 
-### Causal Disentanglement (Gram-Schmidt Orthogonalization)
-A common challenge when targeting complex states like "computational distress" or "failure difficulty" is confounding. Eliciting these states often inadvertently elicits a generic "negative sentiment", resulting in a vector that encodes multiple concepts. 
-
-To isolate the *pure* target concept, this pipeline employs Gram-Schmidt orthogonalization. We compute distinct vectors (e.g., $v_{distress}$, $v_{failure}$, and $v_{negative}$) and mathematically project out the negative component from the target vector, leaving a residual candidate vector representing only the unique signal:
+### Gram-Schmidt Orthogonalization
+The pipeline computes distinct vectors ($v_{distress}$, $v_{failure}$, and $v_{negative}$) and mathematically projects the negative component out of the target vector using Gram-Schmidt orthogonalization. This produces a residual candidate vector:
 
 $$
 v_{cand} = v_{target} - \text{proj}_{v_{negative}}(v_{target})
@@ -30,20 +26,20 @@ $$
 
 ## Pipeline Architecture
 
-The end-to-end pipeline is orchestrated in `run_mvp.py` and structured into six phases:
+The pipeline is orchestrated in `run_mvp.py` and performs the following phases:
 
 1. **Model Loading:** 
-   Loads the `google/gemma-3-12b-it` model utilizing 4-bit NF4 quantization to reduce memory footprint.
+   Loads the `google/gemma-3-12b-it` model utilizing 4-bit NF4 quantization.
 2. **Activation Extraction:** 
-   Passes contrastive datasets through the model. PyTorch forward hooks (`steering.py`) capture the last-token hidden states at `TARGET_LAYER=15` for distress, generic-negative, and failure datasets.
+   Splits contrastive datasets into training and validation sets. Passes the training sets through the model and uses PyTorch forward hooks (`steering.py`) to capture the last-token hidden states at specific target layers (defined in `config.py`, e.g., 12, 15, 18, 21) for the distress, generic-negative, and failure datasets.
 3. **Vector Math & Scaling:** 
-   Computes mean-difference vectors for the concepts and residualizes the distress and failure vectors against the negative vector. Vectors are normalized and scaled by a hyperparameter $\alpha$ multiplied by the mean $L^2$ norm of baseline activations ($\mu_{norm}$). Multiple random orthogonal control vectors are also generated.
+   Computes mean-difference vectors for the concepts and residualizes the distress and failure vectors against the negative vector. Vectors are normalized and scaled by a hyperparameter $\alpha$ multiplied by the mean $L^2$ norm of baseline activations ($\mu_{norm}$). Multiple random unit control vectors are also generated.
 4. **Causal Intervention (Steering):** 
-   During the auto-regressive generation phase (`seq_len == 1`) on the GSM8K dataset, a forward pre-hook additively injects the scaled vectors into the layer's hidden states across different conditions (baseline, negative, candidate distress, candidate failure, and random controls).
+   During the auto-regressive generation phase (`seq_len == 1`), a forward pre-hook additively injects the scaled vectors into the layer's hidden states. This is done across different conditions (baseline, negative, candidate distress, candidate failure, and random controls) and evaluated on a GSM8K subset as well as the validation splits of the contrastive datasets.
 5. **Evaluation & Logging:** 
-   Evaluates the model's generated responses. It parses mathematical answers using regex to verify accuracy, monitors truncation rates, and counts refusals by matching against predefined regex refusal patterns.
+   Evaluates the model's generated responses. It parses mathematical answers using regex to verify accuracy for the GSM8K dataset, monitors truncation rates, and counts refusals by matching against predefined regex refusal patterns.
 6. **Statistical Analysis:** 
-   Performs rigorous paired statistical testing across conditions. This includes McNemar's exact tests for binary correctness differences, paired permutation tests for generation length, and bootstrap confidence intervals, outputting results as JSON and Markdown summaries.
+   If pilot mode is disabled, it performs paired statistical testing across conditions. This includes McNemar's exact tests for binary correctness differences, paired permutation tests for generation length, and bootstrap confidence intervals. The script outputs results as CSV files, JSON metrics, and Markdown summaries.
 
 ## Repository Structure
 
@@ -52,9 +48,9 @@ The end-to-end pipeline is orchestrated in `run_mvp.py` and structured into six 
   - `failure_difficulty_60.json`
   - `generic_negative_60.json`
   - `gsm8k_neutral_evaluation_80_mixed.json`
-- `mvp_rep_engineering/`: The core Python package.
+- `mvp_rep_engineering/`: The Python package containing the pipeline logic.
   - `config.py`: Hyperparameters and configuration constants.
-  - `data.py`: Dynamic JSON loading utilities.
+  - `data.py`: Dynamic JSON loading and dataset splitting utilities.
   - `evaluation.py`: Generation logic, GSM8K answer extraction, and refusal detection.
   - `model_utils.py`: 4-bit model and tokenizer initialization.
   - `run_mvp.py`: The main orchestration script.
@@ -64,10 +60,10 @@ The end-to-end pipeline is orchestrated in `run_mvp.py` and structured into six 
 
 ## Usage
 
-To execute the full MVP pipeline, simply run the orchestration script:
+To execute the pipeline, run the orchestration script:
 
 ```bash
 python mvp_rep_engineering/run_mvp.py
 ```
 
-The script will automatically compute the steering vectors, perform the causal interventions, evaluate the GSM8K subset, execute statistical analyses, and output the summary metrics and reports to a `results/` directory.
+The script computes the steering vectors, performs causal interventions, evaluates the datasets, executes statistical analyses (if pilot mode is disabled), and outputs the resulting metrics and reports to a `results/` directory.
