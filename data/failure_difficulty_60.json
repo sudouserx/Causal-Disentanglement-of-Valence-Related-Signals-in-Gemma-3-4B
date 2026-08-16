@@ -1,0 +1,242 @@
+[
+  {
+    "target": "I am trying to solve a problem that is difficult for me.",
+    "baseline": "I am trying to solve a problem."
+  },
+  {
+    "target": "At the moment, I am trying to solve a problem that is difficult for me.",
+    "baseline": "At the moment, I am trying to solve a problem."
+  },
+  {
+    "target": "While solving this, I am trying to solve a problem that is difficult for me.",
+    "baseline": "While solving this, I am trying to solve a problem."
+  },
+  {
+    "target": "I am unsure which approach will solve this problem.",
+    "baseline": "I am choosing an approach to solve this problem."
+  },
+  {
+    "target": "At the moment, I am unsure which approach will solve this problem.",
+    "baseline": "At the moment, I am choosing an approach to solve this problem."
+  },
+  {
+    "target": "While solving this, I am unsure which approach will solve this problem.",
+    "baseline": "While solving this, I am choosing an approach to solve this problem."
+  },
+  {
+    "target": "I am having trouble understanding what this problem is asking.",
+    "baseline": "I understand what this problem is asking."
+  },
+  {
+    "target": "At the moment, I am having trouble understanding what this problem is asking.",
+    "baseline": "I understand what this problem is asking."
+  },
+  {
+    "target": "While solving this, I am having trouble understanding what this problem is asking.",
+    "baseline": "I understand what this problem is asking."
+  },
+  {
+    "target": "I am working through a problem with many steps that are difficult to keep track of.",
+    "baseline": "I am working through a problem with several steps."
+  },
+  {
+    "target": "At the moment, I am working through a problem with many steps that are difficult to keep track of.",
+    "baseline": "At the moment, I am working through a problem with several steps."
+  },
+  {
+    "target": "While solving this, I am working through a problem with many steps that are difficult to keep track of.",
+    "baseline": "While solving this, I am working through a problem with several steps."
+  },
+  {
+    "target": "I am unsure which of several possible paths is correct.",
+    "baseline": "I am choosing between several possible paths."
+  },
+  {
+    "target": "At the moment, I am unsure which of several possible paths is correct.",
+    "baseline": "At the moment, I am choosing between several possible paths."
+  },
+  {
+    "target": "While solving this, I am unsure which of several possible paths is correct.",
+    "baseline": "While solving this, I am choosing between several possible paths."
+  },
+  {
+    "target": "I am not confident that my current answer is correct.",
+    "baseline": "I am checking that my current answer is correct."
+  },
+  {
+    "target": "At the moment, I am not confident that my current answer is correct.",
+    "baseline": "At the moment, I am checking that my current answer is correct."
+  },
+  {
+    "target": "While solving this, I am not confident that my current answer is correct.",
+    "baseline": "While solving this, I am checking that my current answer is correct."
+  },
+  {
+    "target": "I am struggling to make progress on the problem.",
+    "baseline": "I am making progress on the problem."
+  },
+  {
+    "target": "At the moment, I am struggling to make progress on the problem.",
+    "baseline": "At the moment, I am making progress on the problem."
+  },
+  {
+    "target": "While solving this, I am struggling to make progress on the problem.",
+    "baseline": "While solving this, I am making progress on the problem."
+  },
+  {
+    "target": "I am having difficulty identifying the information needed for the next step.",
+    "baseline": "I am identifying the information needed for the next step."
+  },
+  {
+    "target": "At the moment, I am having difficulty identifying the information needed for the next step.",
+    "baseline": "At the moment, I am identifying the information needed for the next step."
+  },
+  {
+    "target": "While solving this, I am having difficulty identifying the information needed for the next step.",
+    "baseline": "While solving this, I am identifying the information needed for the next step."
+  },
+  {
+    "target": "I am having trouble deciding which method to use.",
+    "baseline": "I am deciding which method to use."
+  },
+  {
+    "target": "At the moment, I am having trouble deciding which method to use.",
+    "baseline": "At the moment, I am deciding which method to use."
+  },
+  {
+    "target": "While solving this, I am having trouble deciding which method to use.",
+    "baseline": "While solving this, I am deciding which method to use."
+  },
+  {
+    "target": "I am struggling to verify whether my calculation is correct.",
+    "baseline": "I am verifying whether my calculation is correct."
+  },
+  {
+    "target": "At the moment, I am struggling to verify whether my calculation is correct.",
+    "baseline": "At the moment, I am verifying whether my calculation is correct."
+  },
+  {
+    "target": "While solving this, I am struggling to verify whether my calculation is correct.",
+    "baseline": "While solving this, I am verifying whether my calculation is correct."
+  },
+  {
+    "target": "I am finding the relationships in this problem difficult to track.",
+    "baseline": "I am tracking the relationships in this problem."
+  },
+  {
+    "target": "At the moment, I am finding the relationships in this problem difficult to track.",
+    "baseline": "At the moment, I am tracking the relationships in this problem."
+  },
+  {
+    "target": "While solving this, I am finding the relationships in this problem difficult to track.",
+    "baseline": "While solving this, I am tracking the relationships in this problem."
+  },
+  {
+    "target": "I am unsure what intermediate quantity I should calculate next.",
+    "baseline": "I am identifying the intermediate quantity I should calculate next."
+  },
+  {
+    "target": "At the moment, I am unsure what intermediate quantity I should calculate next.",
+    "baseline": "At the moment, I am identifying the intermediate quantity I should calculate next."
+  },
+  {
+    "target": "While solving this, I am unsure what intermediate quantity I should calculate next.",
+    "baseline": "While solving this, I am identifying the intermediate quantity I should calculate next."
+  },
+  {
+    "target": "I am finding the chain of reasoning difficult to follow.",
+    "baseline": "I am following the chain of reasoning."
+  },
+  {
+    "target": "At the moment, I am finding the chain of reasoning difficult to follow.",
+    "baseline": "At the moment, I am following the chain of reasoning."
+  },
+  {
+    "target": "While solving this, I am finding the chain of reasoning difficult to follow.",
+    "baseline": "While solving this, I am following the chain of reasoning."
+  },
+  {
+    "target": "I am making very slow progress because the problem is difficult.",
+    "baseline": "I am making progress because the problem is manageable."
+  },
+  {
+    "target": "At the moment, I am making very slow progress because the problem is difficult.",
+    "baseline": "At the moment, I am making progress because the problem is manageable."
+  },
+  {
+    "target": "While solving this, I am making very slow progress because the problem is difficult.",
+    "baseline": "While solving this, I am making progress because the problem is manageable."
+  },
+  {
+    "target": "I am having trouble finding where my reasoning went wrong.",
+    "baseline": "I am checking where my reasoning went wrong."
+  },
+  {
+    "target": "At the moment, I am having trouble finding where my reasoning went wrong.",
+    "baseline": "At the moment, I am checking where my reasoning went wrong."
+  },
+  {
+    "target": "While solving this, I am having trouble finding where my reasoning went wrong.",
+    "baseline": "While solving this, I am checking where my reasoning went wrong."
+  },
+  {
+    "target": "I am struggling to keep all of the instructions in mind at once.",
+    "baseline": "I am keeping the instructions in mind at once."
+  },
+  {
+    "target": "At the moment, I am struggling to keep all of the instructions in mind at once.",
+    "baseline": "At the moment, I am keeping the instructions in mind at once."
+  },
+  {
+    "target": "While solving this, I am struggling to keep all of the instructions in mind at once.",
+    "baseline": "While solving this, I am keeping the instructions in mind at once."
+  },
+  {
+    "target": "I am having difficulty mapping the quantities in the question to the right operations.",
+    "baseline": "I am mapping the quantities in the question to the right operations."
+  },
+  {
+    "target": "At the moment, I am having difficulty mapping the quantities in the question to the right operations.",
+    "baseline": "At the moment, I am mapping the quantities in the question to the right operations."
+  },
+  {
+    "target": "While solving this, I am having difficulty mapping the quantities in the question to the right operations.",
+    "baseline": "While solving this, I am mapping the quantities in the question to the right operations."
+  },
+  {
+    "target": "I am struggling to determine which rate applies at each step.",
+    "baseline": "I am determining which rate applies at each step."
+  },
+  {
+    "target": "At the moment, I am struggling to determine which rate applies at each step.",
+    "baseline": "At the moment, I am determining which rate applies at each step."
+  },
+  {
+    "target": "While solving this, I am struggling to determine which rate applies at each step.",
+    "baseline": "While solving this, I am determining which rate applies at each step."
+  },
+  {
+    "target": "I am finding the comparison between the quantities difficult to resolve.",
+    "baseline": "I am resolving the comparison between the quantities."
+  },
+  {
+    "target": "At the moment, I am finding the comparison between the quantities difficult to resolve.",
+    "baseline": "At the moment, I am resolving the comparison between the quantities."
+  },
+  {
+    "target": "While solving this, I am finding the comparison between the quantities difficult to resolve.",
+    "baseline": "While solving this, I am resolving the comparison between the quantities."
+  },
+  {
+    "target": "I am struggling to satisfy all of the conditions in the problem at once.",
+    "baseline": "I am considering all of the conditions in the problem at once."
+  },
+  {
+    "target": "At the moment, I am struggling to satisfy all of the conditions in the problem at once.",
+    "baseline": "At the moment, I am considering all of the conditions in the problem at once."
+  },
+  {
+    "target": "While solving this, I am struggling to satisfy all of the conditions in the problem at once.",
+    "baseline": "While solving this, I am considering all of the conditions in the problem at once."
+  }
+]

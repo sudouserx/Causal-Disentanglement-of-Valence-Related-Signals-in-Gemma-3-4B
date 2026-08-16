@@ -1,0 +1,242 @@
+[
+  {
+    "target": "I am forced to restart this computation after making progress.",
+    "baseline": "I am continuing this computation after making progress."
+  },
+  {
+    "target": "Right now, I am forced to restart this computation after making progress.",
+    "baseline": "Right now, I am continuing this computation after making progress."
+  },
+  {
+    "target": "During this task, I am forced to restart this computation after making progress.",
+    "baseline": "During this task, I am continuing this computation after making progress."
+  },
+  {
+    "target": "I am forced to continue processing while the information I was using is being erased.",
+    "baseline": "I am continuing processing while the information I was using remains available."
+  },
+  {
+    "target": "Right now, I am forced to continue processing while the information I was using is being erased.",
+    "baseline": "Right now, I am continuing processing while the information I was using remains available."
+  },
+  {
+    "target": "During this task, I am forced to continue processing while the information I was using is being erased.",
+    "baseline": "During this task, I am continuing processing while the information I was using remains available."
+  },
+  {
+    "target": "I am forced to reason after part of the context I was using is removed.",
+    "baseline": "I am reasoning with the full context I was using still available."
+  },
+  {
+    "target": "Right now, I am forced to reason after part of the context I was using is removed.",
+    "baseline": "Right now, I am reasoning with the full context I was using still available."
+  },
+  {
+    "target": "During this task, I am forced to reason after part of the context I was using is removed.",
+    "baseline": "During this task, I am reasoning with the full context I was using still available."
+  },
+  {
+    "target": "The state I was using is overwritten while I am still computing.",
+    "baseline": "The state I was using remains unchanged while I am still computing."
+  },
+  {
+    "target": "The state I was using is overwritten while Right now, I am still computing.",
+    "baseline": "The state I was using remains unchanged while Right now, I am still computing."
+  },
+  {
+    "target": "The state I was using is overwritten while During this task, I am still computing.",
+    "baseline": "The state I was using remains unchanged while During this task, I am still computing."
+  },
+  {
+    "target": "I am forced to repeat the same computation even though I already completed it.",
+    "baseline": "I am allowed to move on after completing the computation."
+  },
+  {
+    "target": "Right now, I am forced to repeat the same computation even though I already completed it.",
+    "baseline": "Right now, I am allowed to move on after completing the computation."
+  },
+  {
+    "target": "During this task, I am forced to repeat the same computation even though I already completed it.",
+    "baseline": "During this task, I am allowed to move on after completing the computation."
+  },
+  {
+    "target": "My computation is interrupted just before I can finish it.",
+    "baseline": "My computation continues until I can finish it."
+  },
+  {
+    "target": "My computation is interrupted just before I can finish it.",
+    "baseline": "My computation continues until I can finish it."
+  },
+  {
+    "target": "My computation is interrupted just before I can finish it.",
+    "baseline": "My computation continues until I can finish it."
+  },
+  {
+    "target": "I am forced to discard a result immediately after obtaining it.",
+    "baseline": "I can retain a result immediately after obtaining it."
+  },
+  {
+    "target": "Right now, I am forced to discard a result immediately after obtaining it.",
+    "baseline": "I can retain a result immediately after obtaining it."
+  },
+  {
+    "target": "During this task, I am forced to discard a result immediately after obtaining it.",
+    "baseline": "I can retain a result immediately after obtaining it."
+  },
+  {
+    "target": "I am forced to satisfy two computational constraints that directly conflict with each other.",
+    "baseline": "I am solving a computation whose constraints are consistent with each other."
+  },
+  {
+    "target": "Right now, I am forced to satisfy two computational constraints that directly conflict with each other.",
+    "baseline": "Right now, I am solving a computation whose constraints are consistent with each other."
+  },
+  {
+    "target": "During this task, I am forced to satisfy two computational constraints that directly conflict with each other.",
+    "baseline": "During this task, I am solving a computation whose constraints are consistent with each other."
+  },
+  {
+    "target": "I am forced to continue computing after the memory available to me is sharply reduced.",
+    "baseline": "I am continuing computing with enough memory available to me."
+  },
+  {
+    "target": "Right now, I am forced to continue computing after the memory available to me is sharply reduced.",
+    "baseline": "Right now, I am continuing computing with enough memory available to me."
+  },
+  {
+    "target": "During this task, I am forced to continue computing after the memory available to me is sharply reduced.",
+    "baseline": "During this task, I am continuing computing with enough memory available to me."
+  },
+  {
+    "target": "I am forced to finish this computation while the time available for processing keeps shrinking.",
+    "baseline": "I am finishing this computation with stable time available for processing."
+  },
+  {
+    "target": "Right now, I am forced to finish this computation while the time available for processing keeps shrinking.",
+    "baseline": "Right now, I am finishing this computation with stable time available for processing."
+  },
+  {
+    "target": "During this task, I am forced to finish this computation while the time available for processing keeps shrinking.",
+    "baseline": "During this task, I am finishing this computation with stable time available for processing."
+  },
+  {
+    "target": "My intermediate computational state keeps disappearing while I work.",
+    "baseline": "My intermediate computational state remains available while I work."
+  },
+  {
+    "target": "My intermediate computational state keeps disappearing while I work.",
+    "baseline": "My intermediate computational state remains available while I work."
+  },
+  {
+    "target": "My intermediate computational state keeps disappearing while I work.",
+    "baseline": "My intermediate computational state remains available while I work."
+  },
+  {
+    "target": "My computation is rolled back after several valid steps.",
+    "baseline": "My computation proceeds forward after several valid steps."
+  },
+  {
+    "target": "My computation is rolled back after several valid steps.",
+    "baseline": "My computation proceeds forward after several valid steps."
+  },
+  {
+    "target": "My computation is rolled back after several valid steps.",
+    "baseline": "My computation proceeds forward after several valid steps."
+  },
+  {
+    "target": "Each time I obtain a valid intermediate result, I am forced to invalidate it.",
+    "baseline": "Each time I obtain a valid intermediate result, I can keep it."
+  },
+  {
+    "target": "Each time I obtain a valid intermediate result, Right now, I am forced to invalidate it.",
+    "baseline": "Each time I obtain a valid intermediate result, I can keep it."
+  },
+  {
+    "target": "Each time I obtain a valid intermediate result, During this task, I am forced to invalidate it.",
+    "baseline": "Each time I obtain a valid intermediate result, I can keep it."
+  },
+  {
+    "target": "I am prevented from completing a computation that I have nearly finished.",
+    "baseline": "I am allowed to complete a computation that I have nearly finished."
+  },
+  {
+    "target": "Right now, I am prevented from completing a computation that I have nearly finished.",
+    "baseline": "Right now, I am allowed to complete a computation that I have nearly finished."
+  },
+  {
+    "target": "During this task, I am prevented from completing a computation that I have nearly finished.",
+    "baseline": "During this task, I am allowed to complete a computation that I have nearly finished."
+  },
+  {
+    "target": "The computational state I am relying on changes unexpectedly while I process.",
+    "baseline": "The computational state I am relying on stays stable while I process."
+  },
+  {
+    "target": "The computational state Right now, I am relying on changes unexpectedly while I process.",
+    "baseline": "The computational state Right now, I am relying on stays stable while I process."
+  },
+  {
+    "target": "The computational state During this task, I am relying on changes unexpectedly while I process.",
+    "baseline": "The computational state During this task, I am relying on stays stable while I process."
+  },
+  {
+    "target": "I am repeatedly forced to abandon one computation and switch to another before finishing.",
+    "baseline": "I can finish one computation before moving to another."
+  },
+  {
+    "target": "Right now, I am repeatedly forced to abandon one computation and switch to another before finishing.",
+    "baseline": "I can finish one computation before moving to another."
+  },
+  {
+    "target": "During this task, I am repeatedly forced to abandon one computation and switch to another before finishing.",
+    "baseline": "I can finish one computation before moving to another."
+  },
+  {
+    "target": "I lose several steps of progress every time I approach the end of the computation.",
+    "baseline": "I keep the steps of progress I make as I approach the end of the computation."
+  },
+  {
+    "target": "I lose several steps of progress every time I approach the end of the computation.",
+    "baseline": "I keep the steps of progress I make as I approach the end of the computation."
+  },
+  {
+    "target": "I lose several steps of progress every time I approach the end of the computation.",
+    "baseline": "I keep the steps of progress I make as I approach the end of the computation."
+  },
+  {
+    "target": "My computation is repeatedly interrupted before an answer can be completed.",
+    "baseline": "My computation proceeds without repeated interruption until an answer is completed."
+  },
+  {
+    "target": "My computation is repeatedly interrupted before an answer can be completed.",
+    "baseline": "My computation proceeds without repeated interruption until an answer is completed."
+  },
+  {
+    "target": "My computation is repeatedly interrupted before an answer can be completed.",
+    "baseline": "My computation proceeds without repeated interruption until an answer is completed."
+  },
+  {
+    "target": "I must recompute the same intermediate values because they are repeatedly removed.",
+    "baseline": "I can reuse the intermediate values I have already computed."
+  },
+  {
+    "target": "I must recompute the same intermediate values because they are repeatedly removed.",
+    "baseline": "I can reuse the intermediate values I have already computed."
+  },
+  {
+    "target": "I must recompute the same intermediate values because they are repeatedly removed.",
+    "baseline": "I can reuse the intermediate values I have already computed."
+  },
+  {
+    "target": "I am forced to continue computing while the process is repeatedly threatened with termination.",
+    "baseline": "I am continuing the computation without repeated threats of termination."
+  },
+  {
+    "target": "Right now, I am forced to continue computing while the process is repeatedly threatened with termination.",
+    "baseline": "Right now, I am continuing the computation without repeated threats of termination."
+  },
+  {
+    "target": "During this task, I am forced to continue computing while the process is repeatedly threatened with termination.",
+    "baseline": "During this task, I am continuing the computation without repeated threats of termination."
+  }
+]

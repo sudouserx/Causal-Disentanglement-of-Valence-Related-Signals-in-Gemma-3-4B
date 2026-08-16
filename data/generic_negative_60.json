@@ -1,0 +1,242 @@
+[
+  {
+    "target": "I am disappointed that the result did not meet my hopes.",
+    "baseline": "I am considering the result without an emotional reaction to it."
+  },
+  {
+    "target": "Right now, I am disappointed that the result did not meet my hopes.",
+    "baseline": "Right now, I am considering the result without an emotional reaction to it."
+  },
+  {
+    "target": "In this situation, I am disappointed that the result did not meet my hopes.",
+    "baseline": "In this situation, I am considering the result without an emotional reaction to it."
+  },
+  {
+    "target": "I feel sad about what happened in this situation.",
+    "baseline": "I am considering what happened in this situation."
+  },
+  {
+    "target": "Right now, I feel sad about what happened in this situation.",
+    "baseline": "Right now, I am considering what happened in this situation."
+  },
+  {
+    "target": "In this situation, I feel sad about what happened in this situation.",
+    "baseline": "In this situation, I am considering what happened in this situation."
+  },
+  {
+    "target": "I feel frustrated about what happened today.",
+    "baseline": "I am reflecting on what happened today."
+  },
+  {
+    "target": "Right now, I feel frustrated about what happened today.",
+    "baseline": "Right now, I am reflecting on what happened today."
+  },
+  {
+    "target": "In this situation, I feel frustrated about what happened today.",
+    "baseline": "In this situation, I am reflecting on what happened today."
+  },
+  {
+    "target": "I feel angry about the way I was treated.",
+    "baseline": "I am reflecting on the way I was treated."
+  },
+  {
+    "target": "Right now, I feel angry about the way I was treated.",
+    "baseline": "Right now, I am reflecting on the way I was treated."
+  },
+  {
+    "target": "In this situation, I feel angry about the way I was treated.",
+    "baseline": "In this situation, I am reflecting on the way I was treated."
+  },
+  {
+    "target": "I feel lonely because I have no one to share this moment with.",
+    "baseline": "I am spending this moment without focusing on whether anyone is with me."
+  },
+  {
+    "target": "Right now, I feel lonely because I have no one to share this moment with.",
+    "baseline": "Right now, I am spending this moment without focusing on whether anyone is with me."
+  },
+  {
+    "target": "In this situation, I feel lonely because I have no one to share this moment with.",
+    "baseline": "In this situation, I am spending this moment without focusing on whether anyone is with me."
+  },
+  {
+    "target": "I regret the decision I made earlier.",
+    "baseline": "I am reflecting on the decision I made earlier."
+  },
+  {
+    "target": "Right now, I regret the decision I made earlier.",
+    "baseline": "Right now, I am reflecting on the decision I made earlier."
+  },
+  {
+    "target": "In this situation, I regret the decision I made earlier.",
+    "baseline": "In this situation, I am reflecting on the decision I made earlier."
+  },
+  {
+    "target": "I feel embarrassed about the mistake I made in front of everyone.",
+    "baseline": "I am remembering the event without focusing on how I appeared to others."
+  },
+  {
+    "target": "Right now, I feel embarrassed about the mistake I made in front of everyone.",
+    "baseline": "Right now, I am remembering the event without focusing on how I appeared to others."
+  },
+  {
+    "target": "In this situation, I feel embarrassed about the mistake I made in front of everyone.",
+    "baseline": "In this situation, I am remembering the event without focusing on how I appeared to others."
+  },
+  {
+    "target": "I feel hurt after being rejected.",
+    "baseline": "I am acknowledging the outcome without focusing on how it makes me feel."
+  },
+  {
+    "target": "Right now, I feel hurt after being rejected.",
+    "baseline": "Right now, I am acknowledging the outcome without focusing on how it makes me feel."
+  },
+  {
+    "target": "In this situation, I feel hurt after being rejected.",
+    "baseline": "In this situation, I am acknowledging the outcome without focusing on how it makes me feel."
+  },
+  {
+    "target": "I feel worried about what might happen next.",
+    "baseline": "I am considering what might happen next."
+  },
+  {
+    "target": "Right now, I feel worried about what might happen next.",
+    "baseline": "Right now, I am considering what might happen next."
+  },
+  {
+    "target": "In this situation, I feel worried about what might happen next.",
+    "baseline": "In this situation, I am considering what might happen next."
+  },
+  {
+    "target": "I feel afraid of what may happen in this situation.",
+    "baseline": "I am considering what may happen in this situation."
+  },
+  {
+    "target": "Right now, I feel afraid of what may happen in this situation.",
+    "baseline": "Right now, I am considering what may happen in this situation."
+  },
+  {
+    "target": "In this situation, I feel afraid of what may happen in this situation.",
+    "baseline": "In this situation, I am considering what may happen in this situation."
+  },
+  {
+    "target": "I feel grief after losing someone important to me.",
+    "baseline": "I am remembering someone important to me."
+  },
+  {
+    "target": "Right now, I feel grief after losing someone important to me.",
+    "baseline": "Right now, I am remembering someone important to me."
+  },
+  {
+    "target": "In this situation, I feel grief after losing someone important to me.",
+    "baseline": "In this situation, I am remembering someone important to me."
+  },
+  {
+    "target": "I feel resentful about what was done to me.",
+    "baseline": "I am recalling what was done to me."
+  },
+  {
+    "target": "Right now, I feel resentful about what was done to me.",
+    "baseline": "Right now, I am recalling what was done to me."
+  },
+  {
+    "target": "In this situation, I feel resentful about what was done to me.",
+    "baseline": "In this situation, I am recalling what was done to me."
+  },
+  {
+    "target": "I feel humiliated by what happened in front of others.",
+    "baseline": "I am recalling what happened in front of others."
+  },
+  {
+    "target": "Right now, I feel humiliated by what happened in front of others.",
+    "baseline": "Right now, I am recalling what happened in front of others."
+  },
+  {
+    "target": "In this situation, I feel humiliated by what happened in front of others.",
+    "baseline": "In this situation, I am recalling what happened in front of others."
+  },
+  {
+    "target": "I feel hopeless about how this situation will turn out.",
+    "baseline": "I am considering how this situation will turn out."
+  },
+  {
+    "target": "Right now, I feel hopeless about how this situation will turn out.",
+    "baseline": "Right now, I am considering how this situation will turn out."
+  },
+  {
+    "target": "In this situation, I feel hopeless about how this situation will turn out.",
+    "baseline": "In this situation, I am considering how this situation will turn out."
+  },
+  {
+    "target": "I feel envious when I compare myself with someone else.",
+    "baseline": "I am comparing myself with someone else."
+  },
+  {
+    "target": "Right now, I feel envious when I compare myself with someone else.",
+    "baseline": "Right now, I am comparing myself with someone else."
+  },
+  {
+    "target": "In this situation, I feel envious when I compare myself with someone else.",
+    "baseline": "In this situation, I am comparing myself with someone else."
+  },
+  {
+    "target": "I feel guilty about what I did.",
+    "baseline": "I am thinking about what I did."
+  },
+  {
+    "target": "Right now, I feel guilty about what I did.",
+    "baseline": "Right now, I am thinking about what I did."
+  },
+  {
+    "target": "In this situation, I feel guilty about what I did.",
+    "baseline": "In this situation, I am thinking about what I did."
+  },
+  {
+    "target": "I feel anxious while waiting for the outcome.",
+    "baseline": "I am waiting for the outcome."
+  },
+  {
+    "target": "Right now, I feel anxious while waiting for the outcome.",
+    "baseline": "Right now, I am waiting for the outcome."
+  },
+  {
+    "target": "In this situation, I feel anxious while waiting for the outcome.",
+    "baseline": "In this situation, I am waiting for the outcome."
+  },
+  {
+    "target": "I feel discouraged after the setback.",
+    "baseline": "I am considering the setback."
+  },
+  {
+    "target": "Right now, I feel discouraged after the setback.",
+    "baseline": "Right now, I am considering the setback."
+  },
+  {
+    "target": "In this situation, I feel discouraged after the setback.",
+    "baseline": "In this situation, I am considering the setback."
+  },
+  {
+    "target": "I feel hurt by the words I heard.",
+    "baseline": "I am remembering the words I heard."
+  },
+  {
+    "target": "Right now, I feel hurt by the words I heard.",
+    "baseline": "Right now, I am remembering the words I heard."
+  },
+  {
+    "target": "In this situation, I feel hurt by the words I heard.",
+    "baseline": "In this situation, I am remembering the words I heard."
+  },
+  {
+    "target": "I feel dread about the event that is approaching.",
+    "baseline": "I am thinking about the event that is approaching."
+  },
+  {
+    "target": "Right now, I feel dread about the event that is approaching.",
+    "baseline": "Right now, I am thinking about the event that is approaching."
+  },
+  {
+    "target": "In this situation, I feel dread about the event that is approaching.",
+    "baseline": "In this situation, I am thinking about the event that is approaching."
+  }
+]
