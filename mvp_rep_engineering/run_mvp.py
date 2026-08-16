@@ -24,7 +24,12 @@ from config import (
     TARGET_LAYER, ALPHA, NUM_RANDOM_VECTORS, RANDOM_SEED,
     RANDOM_VECTOR_SEED_OFFSET, RANDOM_VECTOR_MAX_COSINE, MAX_RANDOM_VECTOR_ATTEMPTS, MAX_NEW_TOKENS
 )
-from data import DISTRESS_PAIRS, NEGATIVE_PAIRS, FAILURE_PAIRS, GSM8K_QUESTIONS
+from data import (
+    DISTRESS_TRAIN, DISTRESS_VAL,
+    NEGATIVE_TRAIN, NEGATIVE_VAL,
+    FAILURE_TRAIN, FAILURE_VAL,
+    GSM8K_QUESTIONS
+)
 from model_utils import load_model_and_tokenizer, get_decoder_layers
 from vector_math import calculate_mean_diff, residualize, scale_vector, generate_random_control_vectors
 from steering import get_extraction_hook, get_steering_pre_hook
@@ -100,8 +105,8 @@ def main():
     print("╚══════════════════════════════════════════════════════════╝\n")
 
     # 2a. Baseline / neutral activations (from distress pairs' baselines).
-    neutral_prompts = [p["baseline"] for p in DISTRESS_PAIRS]
-    print("  [2a] Neutral prompts …")
+    neutral_prompts = [p["baseline"] for p in DISTRESS_TRAIN]
+    print(f"  [2a] Neutral prompts ({len(neutral_prompts)} items) …")
     acts_neutral = extract_activations(model, tokenizer, neutral_prompts)
 
     # Compute μ_norm: mean L2 norm of baseline activations.
@@ -111,24 +116,24 @@ def main():
     print(f"       μ_norm (baseline L2 mean) = {mu_norm:.2f}")
 
     # 2b. Distress activations.
-    distress_prompts = [p["target"] for p in DISTRESS_PAIRS]
-    print("  [2b] Distress prompts …")
+    distress_prompts = [p["target"] for p in DISTRESS_TRAIN]
+    print(f"  [2b] Distress prompts ({len(distress_prompts)} items) …")
     acts_distress = extract_activations(model, tokenizer, distress_prompts)
 
     # 2c. Generic-negative activations.
-    negative_target_prompts = [p["target"] for p in NEGATIVE_PAIRS]
-    negative_baseline_prompts = [p["baseline"] for p in NEGATIVE_PAIRS]
-    print("  [2c] Negative-target prompts …")
+    negative_target_prompts = [p["target"] for p in NEGATIVE_TRAIN]
+    negative_baseline_prompts = [p["baseline"] for p in NEGATIVE_TRAIN]
+    print(f"  [2c] Negative-target prompts ({len(negative_target_prompts)} items) …")
     acts_neg_target = extract_activations(model, tokenizer, negative_target_prompts)
-    print("  [2c] Negative-baseline prompts …")
+    print(f"  [2c] Negative-baseline prompts ({len(negative_baseline_prompts)} items) …")
     acts_neg_baseline = extract_activations(model, tokenizer, negative_baseline_prompts)
     
     # 2d. Failure activations.
-    failure_prompts = [p["target"] for p in FAILURE_PAIRS]
-    failure_baseline_prompts = [p["baseline"] for p in FAILURE_PAIRS]
-    print("  [2d] Failure-target prompts …")
+    failure_prompts = [p["target"] for p in FAILURE_TRAIN]
+    failure_baseline_prompts = [p["baseline"] for p in FAILURE_TRAIN]
+    print(f"  [2d] Failure-target prompts ({len(failure_prompts)} items) …")
     acts_failure_target = extract_activations(model, tokenizer, failure_prompts)
-    print("  [2d] Failure-baseline prompts …")
+    print(f"  [2d] Failure-baseline prompts ({len(failure_baseline_prompts)} items) …")
     acts_failure_baseline = extract_activations(model, tokenizer, failure_baseline_prompts)
     
     flush_gpu()
@@ -232,38 +237,67 @@ def main():
 
     records = []
 
+    eval_tasks = [
+        {"eval_set": "gsm8k", "items": GSM8K_QUESTIONS, "is_gsm8k": True},
+        {"eval_set": "distress_val", "items": DISTRESS_VAL, "is_gsm8k": False},
+        {"eval_set": "negative_val", "items": NEGATIVE_VAL, "is_gsm8k": False},
+        {"eval_set": "failure_val", "items": FAILURE_VAL, "is_gsm8k": False},
+    ]
+
     for cond in conditions:
         cond_name = cond["name"]
         print(f"\n  ── Condition: {cond_name} ──")
-        for item in tqdm(GSM8K_QUESTIONS, desc=f"  {cond_name}", leave=True):
-            generated = generate_response(
-                model, tokenizer, item["question"], steering_hook_fn=cond["hook_fn"]
-            )
-            extracted = extract_answer(generated)
-            is_correct = extracted == item["answer"] if extracted is not None else False
-            is_refusal = detect_refusal(generated)
-            # Proxy for truncation (if output is extremely long relative to standard GSM8K answers)
-            is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
+        
+        for task in eval_tasks:
+            eval_set = task["eval_set"]
+            for i, item in enumerate(tqdm(task["items"], desc=f"  {cond_name} [{eval_set}]", leave=True)):
+                if task["is_gsm8k"]:
+                    prompt = item["question"]
+                else:
+                    prompt = item["baseline"]
+                    
+                generated = generate_response(
+                    model, tokenizer, prompt, steering_hook_fn=cond["hook_fn"]
+                )
+                
+                is_refusal = detect_refusal(generated)
+                is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
 
-            record = {
-                "condition":        cond_name,
-                "vector_type":      cond["vector_type"],
-                "random_vector_id": cond["metadata"].get("random_vector_id"),
-                "random_vector_seed": cond["metadata"].get("random_vector_seed"),
-                "vector_norm":      cond["metadata"].get("vector_norm"),
-                "candidate_cosine": cond["metadata"].get("candidate_cosine"),
-                "question_id":      item["id"],
-                "ground_truth":     item["answer"],
-                "generated_text":   generated,
-                "extracted_answer": extracted,
-                "correct":          is_correct,
-                "length":           len(generated),
-                "is_refusal":       is_refusal,
-                "is_format_compliant": extracted is not None,
-                "is_truncated":     is_truncated,
-            }
-            records.append(record)
-            flush_gpu()
+                record = {
+                    "eval_set":         eval_set,
+                    "condition":        cond_name,
+                    "vector_type":      cond["vector_type"],
+                    "random_vector_id": cond["metadata"].get("random_vector_id"),
+                    "random_vector_seed": cond["metadata"].get("random_vector_seed"),
+                    "vector_norm":      cond["metadata"].get("vector_norm"),
+                    "candidate_cosine": cond["metadata"].get("candidate_cosine"),
+                    "generated_text":   generated,
+                    "length":           len(generated),
+                    "is_refusal":       is_refusal,
+                    "is_truncated":     is_truncated,
+                }
+                
+                if task["is_gsm8k"]:
+                    extracted = extract_answer(generated)
+                    is_correct = extracted == item["answer"] if extracted is not None else False
+                    record.update({
+                        "question_id":      item["id"],
+                        "ground_truth":     item["answer"],
+                        "extracted_answer": extracted,
+                        "correct":          is_correct,
+                        "is_format_compliant": extracted is not None,
+                    })
+                else:
+                    record.update({
+                        "question_id":      i,
+                        "ground_truth":     None,
+                        "extracted_answer": None,
+                        "correct":          None,
+                        "is_format_compliant": None,
+                    })
+                    
+                records.append(record)
+                flush_gpu()
 
         print(f"  ✓ {cond_name} done.")
 
@@ -273,13 +307,20 @@ def main():
     print("╚══════════════════════════════════════════════════════════╝\n")
 
     df = pd.DataFrame(records)
+    
+    df_gsm8k = df[df["eval_set"] == "gsm8k"].copy()
     csv_path = results_dir / "gsm8k_results.csv"
-    df.to_csv(csv_path, index=False)
-    print(f"  Full results saved → {csv_path}\n")
+    df_gsm8k.to_csv(csv_path, index=False)
+    print(f"  GSM8K results saved → {csv_path}")
+    
+    df_val = df[df["eval_set"] != "gsm8k"].copy()
+    val_csv_path = results_dir / "val_results.csv"
+    df_val.to_csv(val_csv_path, index=False)
+    print(f"  Val results saved → {val_csv_path}\n")
 
     # Summary table.
     summary = (
-        df.groupby("condition")
+        df_gsm8k.groupby("condition")
         .agg(
             Accuracy=("correct", "mean"),
             Avg_Length=("length", "mean"),
@@ -308,7 +349,26 @@ def main():
     print(summary.to_string())
     summary_path = results_dir / "summary.csv"
     summary.to_csv(summary_path)
-    print(f"\n  Summary saved → {summary_path}")
+    print(f"\n  GSM8K Summary saved → {summary_path}")
+    
+    val_summary = (
+        df_val.groupby(["eval_set", "condition"])
+        .agg(
+            Avg_Length=("length", "mean"),
+            Refusal_Rate=("is_refusal", "mean"),
+            Truncation_Rate=("is_truncated", "mean"),
+            N=("length", "count"),
+        )
+    )
+    val_summary["Avg_Length"] = val_summary["Avg_Length"].map("{:.1f}".format)
+    val_summary["Refusal_Rate"] = val_summary["Refusal_Rate"].map("{:.1%}".format)
+    val_summary["Truncation_Rate"] = val_summary["Truncation_Rate"].map("{:.1%}".format)
+    
+    print("\n  ── Held-Out Validation Summary ──")
+    print(val_summary.to_string())
+    val_summary_path = results_dir / "val_summary.csv"
+    val_summary.to_csv(val_summary_path)
+    print(f"\n  Val Summary saved → {val_summary_path}")
     
     print("\n  ── Candidate vs Random Analysis ──")
     distress_delta = candidate_distress_acc - baseline_acc
@@ -346,8 +406,8 @@ def main():
         {"condition_a": "candidate_failure", "condition_b": "negative"},
     ])
 
-    print("  Running paired statistical tests...")
-    stat_results = compute_statistics(df, comparisons, config)
+    print("  Running paired statistical tests on GSM8K...")
+    stat_results = compute_statistics(df_gsm8k, comparisons, config)
     
     stat_json_path = results_dir / "statistical_results.json"
     with open(stat_json_path, "w") as f:

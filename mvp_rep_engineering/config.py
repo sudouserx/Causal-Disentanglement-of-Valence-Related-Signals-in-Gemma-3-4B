@@ -11,6 +11,10 @@ MODEL_ID: str = "google/gemma-3-12b-it"
 TARGET_LAYER: int = 15          # Middle-late layer for semantic concept probing
 ALPHA: float = 0.1              # Steering magnitude scalar
 
+# ─── Data Split ──────────────────────────────────────────────────────────────
+TRAIN_SPLIT_RATIO: float = 0.8
+DATA_SPLIT_SEED: int = 42
+
 # ─── Generation ──────────────────────────────────────────────────────────────
 MAX_NEW_TOKENS: int = 256
 
