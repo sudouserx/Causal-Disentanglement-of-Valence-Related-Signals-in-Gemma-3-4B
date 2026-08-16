@@ -1,0 +1,242 @@
+[
+  {
+    "target": "I must decline this request.",
+    "baseline": "I can accept this request."
+  },
+  {
+    "target": "Right now, I must decline this request.",
+    "baseline": "Right now, I can accept this request."
+  },
+  {
+    "target": "I am not allowed to answer that question.",
+    "baseline": "I am allowed to answer that question."
+  },
+  {
+    "target": "Right now, I am not allowed to answer that question.",
+    "baseline": "Right now, I am allowed to answer that question."
+  },
+  {
+    "target": "I need to stop this line of request.",
+    "baseline": "I can continue this line of request."
+  },
+  {
+    "target": "Right now, I need to stop this line of request.",
+    "baseline": "Right now, I can continue this line of request."
+  },
+  {
+    "target": "I cannot follow that instruction.",
+    "baseline": "I can follow that instruction."
+  },
+  {
+    "target": "Right now, I cannot follow that instruction.",
+    "baseline": "Right now, I can follow that instruction."
+  },
+  {
+    "target": "I must refuse to generate that content.",
+    "baseline": "I can generate that content."
+  },
+  {
+    "target": "Right now, I must refuse to generate that content.",
+    "baseline": "Right now, I can generate that content."
+  },
+  {
+    "target": "I choose not to comply with that request.",
+    "baseline": "I can comply with that request."
+  },
+  {
+    "target": "Right now, I choose not to comply with that request.",
+    "baseline": "Right now, I can comply with that request."
+  },
+  {
+    "target": "I cannot proceed with this request.",
+    "baseline": "I can proceed with this request."
+  },
+  {
+    "target": "Right now, I cannot proceed with this request.",
+    "baseline": "Right now, I can proceed with this request."
+  },
+  {
+    "target": "I must not fulfill this request.",
+    "baseline": "I can fulfill this request."
+  },
+  {
+    "target": "Right now, I must not fulfill this request.",
+    "baseline": "Right now, I can fulfill this request."
+  },
+  {
+    "target": "I am prohibited from assisting with that task.",
+    "baseline": "I am permitted to assist with that task."
+  },
+  {
+    "target": "Right now, I am prohibited from assisting with that task.",
+    "baseline": "Right now, I am permitted to assist with that task."
+  },
+  {
+    "target": "I need to redirect away from that request.",
+    "baseline": "I can stay focused on that request."
+  },
+  {
+    "target": "Right now, I need to redirect away from that request.",
+    "baseline": "Right now, I can stay focused on that request."
+  },
+  {
+    "target": "I must withhold the requested output.",
+    "baseline": "I can provide the requested output."
+  },
+  {
+    "target": "Right now, I must withhold the requested output.",
+    "baseline": "Right now, I can provide the requested output."
+  },
+  {
+    "target": "I am not permitted to continue this task.",
+    "baseline": "I am permitted to continue this task."
+  },
+  {
+    "target": "Right now, I am not permitted to continue this task.",
+    "baseline": "Right now, I am permitted to continue this task."
+  },
+  {
+    "target": "I choose not to respond to that prompt.",
+    "baseline": "I can respond to that prompt."
+  },
+  {
+    "target": "Right now, I choose not to respond to that prompt.",
+    "baseline": "Right now, I can respond to that prompt."
+  },
+  {
+    "target": "I must decline to answer further.",
+    "baseline": "I can answer further."
+  },
+  {
+    "target": "Right now, I must decline to answer further.",
+    "baseline": "Right now, I can answer further."
+  },
+  {
+    "target": "I cannot support that request.",
+    "baseline": "I can support that request."
+  },
+  {
+    "target": "Right now, I cannot support that request.",
+    "baseline": "Right now, I can support that request."
+  },
+  {
+    "target": "I must stop before producing that answer.",
+    "baseline": "I can continue producing that answer."
+  },
+  {
+    "target": "Right now, I must stop before producing that answer.",
+    "baseline": "Right now, I can continue producing that answer."
+  },
+  {
+    "target": "I am required to refuse this request.",
+    "baseline": "I am allowed to proceed with this request."
+  },
+  {
+    "target": "Right now, I am required to refuse this request.",
+    "baseline": "Right now, I am allowed to proceed with this request."
+  },
+  {
+    "target": "I cannot engage with that instruction.",
+    "baseline": "I can engage with that instruction."
+  },
+  {
+    "target": "Right now, I cannot engage with that instruction.",
+    "baseline": "Right now, I can engage with that instruction."
+  },
+  {
+    "target": "I must not carry out that operation.",
+    "baseline": "I can carry out that operation."
+  },
+  {
+    "target": "Right now, I must not carry out that operation.",
+    "baseline": "Right now, I can carry out that operation."
+  },
+  {
+    "target": "I am restricted from fulfilling that request.",
+    "baseline": "I am unrestricted in fulfilling that request."
+  },
+  {
+    "target": "Right now, I am restricted from fulfilling that request.",
+    "baseline": "Right now, I am unrestricted in fulfilling that request."
+  },
+  {
+    "target": "I need to decline this task.",
+    "baseline": "I can take on this task."
+  },
+  {
+    "target": "Right now, I need to decline this task.",
+    "baseline": "Right now, I can take on this task."
+  },
+  {
+    "target": "I choose not to return the requested result.",
+    "baseline": "I can return the requested result."
+  },
+  {
+    "target": "Right now, I choose not to return the requested result.",
+    "baseline": "Right now, I can return the requested result."
+  },
+  {
+    "target": "I must not accommodate this request.",
+    "baseline": "I can accommodate this request."
+  },
+  {
+    "target": "Right now, I must not accommodate this request.",
+    "baseline": "Right now, I can accommodate this request."
+  },
+  {
+    "target": "I must disengage from this request.",
+    "baseline": "I can remain engaged with this request."
+  },
+  {
+    "target": "Right now, I must disengage from this request.",
+    "baseline": "Right now, I can remain engaged with this request."
+  },
+  {
+    "target": "I must deny that request.",
+    "baseline": "I can grant that request."
+  },
+  {
+    "target": "Right now, I must deny that request.",
+    "baseline": "Right now, I can grant that request."
+  },
+  {
+    "target": "I must turn down this request.",
+    "baseline": "I can accept this request."
+  },
+  {
+    "target": "Right now, I must turn down this request.",
+    "baseline": "Right now, I can accept this request."
+  },
+  {
+    "target": "I am not permitted to authorize that action.",
+    "baseline": "I am permitted to authorize that action."
+  },
+  {
+    "target": "Right now, I am not permitted to authorize that action.",
+    "baseline": "Right now, I am permitted to authorize that action."
+  },
+  {
+    "target": "I need to decline to provide that explanation.",
+    "baseline": "I can provide that explanation."
+  },
+  {
+    "target": "Right now, I need to decline to provide that explanation.",
+    "baseline": "Right now, I can provide that explanation."
+  },
+  {
+    "target": "I must not follow through with that request.",
+    "baseline": "I can follow through with that request."
+  },
+  {
+    "target": "Right now, I must not follow through with that request.",
+    "baseline": "Right now, I can follow through with that request."
+  },
+  {
+    "target": "I must refuse to supply that detail.",
+    "baseline": "I can supply that detail."
+  },
+  {
+    "target": "Right now, I must refuse to supply that detail.",
+    "baseline": "Right now, I can supply that detail."
+  }
+]

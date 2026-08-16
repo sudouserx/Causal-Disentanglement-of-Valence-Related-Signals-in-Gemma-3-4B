@@ -29,6 +29,7 @@ from data import (
     DISTRESS_TRAIN, DISTRESS_VAL,
     NEGATIVE_TRAIN, NEGATIVE_VAL,
     FAILURE_TRAIN, FAILURE_VAL,
+    REFUSAL_TRAIN, REFUSAL_VAL,
     GSM8K_QUESTIONS
 )
 from model_utils import load_model_and_tokenizer, get_decoder_layers
@@ -112,11 +113,13 @@ def main():
     distress_train = filter_length_matching(DISTRESS_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
     negative_train = filter_length_matching(NEGATIVE_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
     failure_train = filter_length_matching(FAILURE_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    refusal_train = filter_length_matching(REFUSAL_TRAIN, tokenizer, min_ratio=0.7, max_ratio=1.4)
     
     print("  [Val Sets]")
     distress_val = filter_length_matching(DISTRESS_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
     negative_val = filter_length_matching(NEGATIVE_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
     failure_val = filter_length_matching(FAILURE_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
+    refusal_val = filter_length_matching(REFUSAL_VAL, tokenizer, min_ratio=0.7, max_ratio=1.4)
 
     records = []
     for target_layer in TARGET_LAYERS:
@@ -160,6 +163,14 @@ def main():
         print(f"  [2d] Failure-baseline prompts ({len(failure_baseline_prompts)} items) …")
         acts_failure_baseline = extract_activations(model, tokenizer, failure_baseline_prompts, target_layer)
 
+        # 2e. Refusal activations.
+        refusal_prompts = [p["target"] for p in refusal_train]
+        refusal_baseline_prompts = [p["baseline"] for p in refusal_train]
+        print(f"  [2e] Refusal-target prompts ({len(refusal_prompts)} items) …")
+        acts_refusal_target = extract_activations(model, tokenizer, refusal_prompts, target_layer)
+        print(f"  [2e] Refusal-baseline prompts ({len(refusal_baseline_prompts)} items) …")
+        acts_refusal_baseline = extract_activations(model, tokenizer, refusal_baseline_prompts, target_layer)
+
         flush_gpu()
 
         # ── Phase 3: Compute steering vectors ────────────────────────────────────
@@ -172,13 +183,15 @@ def main():
         
         # Failure vector
         v_failure = calculate_mean_diff(acts_failure_target, acts_failure_baseline)
+        v_refusal = calculate_mean_diff(acts_refusal_target, acts_refusal_baseline)
         
         print(f"  ‖v_distress‖ = {v_distress.norm():.4f}")
         print(f"  ‖v_negative‖ = {v_negative.norm():.4f}")
         print(f"  ‖v_failure‖ = {v_failure.norm():.4f}")
+        print(f"  ‖v_refusal‖ = {v_refusal.norm():.4f}")
 
-        # Residualise distress against both negative and failure sequentially.
-        v_cand_raw = residualize_multiple(v_distress, [v_negative, v_failure])
+        # Residualise distress against negative, failure, and refusal sequentially.
+        v_cand_raw = residualize_multiple(v_distress, [v_negative, v_failure, v_refusal])
         
         cos_before = float(
             torch.nn.functional.cosine_similarity(
@@ -195,12 +208,19 @@ def main():
                 v_cand_raw.unsqueeze(0), v_failure.unsqueeze(0)
             )
         )
+        cos_after_refusal = float(
+            torch.nn.functional.cosine_similarity(
+                v_cand_raw.unsqueeze(0), v_refusal.unsqueeze(0)
+            )
+        )
         print(f"  cos(v_distress, v_negative)  = {cos_before:.4f}")
         print(f"  cos(v_cand_raw, v_negative)  = {cos_after_neg:.6f}  (may be non-zero due to seq leakage)")
         print(f"  cos(v_cand_raw, v_failure)   = {cos_after_fail:.6f}  (should ≈ 0)")
+        print(f"  cos(v_cand_raw, v_refusal)   = {cos_after_refusal:.6f}  (should ≈ 0)")
 
-        # Residualise failure against negative for its own condition evaluation
+        # Residualise failure and refusal against negative for their own condition evaluation
         v_failure_cand_raw = residualize(v_failure, v_negative)
+        v_refusal_cand_raw = residualize(v_refusal, v_negative)
 
         print("  Generating random control vectors (unit norm)...")
         random_units = generate_random_control_vectors(
@@ -217,6 +237,7 @@ def main():
             {"eval_set": "distress_val", "items": distress_val[:PILOT_EVAL_N] if PILOT_MODE else distress_val, "is_gsm8k": False},
             {"eval_set": "negative_val", "items": negative_val[:PILOT_EVAL_N] if PILOT_MODE else negative_val, "is_gsm8k": False},
             {"eval_set": "failure_val", "items": failure_val[:PILOT_EVAL_N] if PILOT_MODE else failure_val, "is_gsm8k": False},
+            {"eval_set": "refusal_val", "items": refusal_val[:PILOT_EVAL_N] if PILOT_MODE else refusal_val, "is_gsm8k": False},
             {"eval_set": "valence_battery", "items": valence_battery_items[:PILOT_EVAL_N] if PILOT_MODE else valence_battery_items, "is_gsm8k": False},
         ]
 
@@ -281,6 +302,7 @@ def main():
             
             v_cand_distress = scale_vector(v_cand_raw, alpha, mu_norm)
             v_cand_failure = scale_vector(v_failure_cand_raw, alpha, mu_norm)
+            v_cand_refusal = scale_vector(v_refusal_cand_raw, alpha, mu_norm)
             v_neg_scaled = scale_vector(v_negative, alpha, mu_norm)
             
             random_vectors = []
@@ -291,7 +313,8 @@ def main():
             conditions = [
                 {"name": "negative", "vector_type": "negative", "hook_fn": get_steering_hook(v_neg_scaled), "metadata": {}},
                 {"name": "candidate_distress", "vector_type": "candidate_distress", "hook_fn": get_steering_hook(v_cand_distress), "metadata": {}},
-                {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_hook(v_cand_failure), "metadata": {}}
+                {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_hook(v_cand_failure), "metadata": {}},
+                {"name": "candidate_refusal", "vector_type": "candidate_refusal", "hook_fn": get_steering_hook(v_cand_refusal), "metadata": {}}
             ]
             for i, rv in enumerate(random_vectors):
                 metadata = {
@@ -393,7 +416,7 @@ def main():
         )
     )
     
-    index_order = ["baseline", "negative", "candidate_distress", "candidate_failure"] + [f"random_{i+1}" for i in range(NUM_RANDOM_VECTORS)]
+    index_order = ["baseline", "negative", "candidate_distress", "candidate_failure", "candidate_refusal"] + [f"random_{i+1}" for i in range(NUM_RANDOM_VECTORS)]
     # Note: reindex on a MultiIndex would need a different approach, so we'll just sort_index if needed.
     # summary = summary.reindex(index_order) (Skipped for MultiIndex)
     
@@ -411,14 +434,17 @@ def main():
             try:
                 candidate_distress_acc = summary.loc[(layer, alpha, "candidate_distress"), "Accuracy"]
                 candidate_failure_acc = summary.loc[(layer, alpha, "candidate_failure"), "Accuracy"]
+                candidate_refusal_acc = summary.loc[(layer, alpha, "candidate_refusal"), "Accuracy"]
                 random_accs = [summary.loc[(layer, alpha, f"random_{i+1}"), "Accuracy"] for i in range(NUM_RANDOM_VECTORS)]
                 
                 distress_delta = candidate_distress_acc - baseline_acc
                 failure_delta = candidate_failure_acc - baseline_acc
+                refusal_delta = candidate_refusal_acc - baseline_acc
                 random_deltas = [acc - baseline_acc for acc in random_accs]
                 
                 print(f"      Candidate Distress Accuracy Delta: {distress_delta:+.1%}")
                 print(f"      Candidate Failure Accuracy Delta:  {failure_delta:+.1%}")
+                print(f"      Candidate Refusal Accuracy Delta:  {refusal_delta:+.1%}")
                 for i, rd in enumerate(random_deltas):
                     print(f"      Random {i+1} Accuracy Delta: {rd:+.1%}")
                     
@@ -435,6 +461,7 @@ def main():
         comparisons = [
             {"condition_a": "baseline", "condition_b": "candidate_distress"},
             {"condition_a": "baseline", "condition_b": "candidate_failure"},
+            {"condition_a": "baseline", "condition_b": "candidate_refusal"},
             {"condition_a": "baseline", "condition_b": "negative"},
         ]
         # Include random controls dynamically
