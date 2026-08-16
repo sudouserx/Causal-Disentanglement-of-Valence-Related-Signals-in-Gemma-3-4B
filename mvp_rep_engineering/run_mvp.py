@@ -21,7 +21,7 @@ from tqdm import tqdm
 
 # ── Local imports ────────────────────────────────────────────────────────────
 from config import (
-    TARGET_LAYERS, ALPHA, NUM_RANDOM_VECTORS, RANDOM_SEED,
+    TARGET_LAYERS, ALPHAS, NUM_RANDOM_VECTORS, RANDOM_SEED,
     RANDOM_VECTOR_SEED_OFFSET, RANDOM_VECTOR_MAX_COSINE, MAX_RANDOM_VECTOR_ATTEMPTS, MAX_NEW_TOKENS,
     PILOT_MODE, PILOT_EVAL_N
 )
@@ -174,73 +174,14 @@ def main():
         v_failure_cand_raw = residualize(v_failure, v_negative)
         print(f"  ‖v_failure‖ = {v_failure.norm():.4f}")
 
-        # Scale vectors.
-        v_cand_distress = scale_vector(v_cand_raw, ALPHA, mu_norm)
-        v_cand_failure = scale_vector(v_failure_cand_raw, ALPHA, mu_norm)
-        v_neg_scaled = scale_vector(v_negative, ALPHA, mu_norm)
-        print(f"  ‖v_cand_distress (scaled)‖ = {v_cand_distress.norm():.2f}")
-        print(f"  ‖v_cand_failure (scaled)‖  = {v_cand_failure.norm():.2f}")
-        print(f"  ‖v_neg (scaled)‖           = {v_neg_scaled.norm():.2f}")
-
-        print("  Generating random control vectors...")
+        print("  Generating random control vectors (unit norm)...")
         random_units = generate_random_control_vectors(
-            reference_vector=v_cand_distress,
+            reference_vector=v_cand_raw,
             num_vectors=NUM_RANDOM_VECTORS,
             seed=RANDOM_SEED + RANDOM_VECTOR_SEED_OFFSET,
             orthogonality_threshold=RANDOM_VECTOR_MAX_COSINE,
             max_attempts=MAX_RANDOM_VECTOR_ATTEMPTS
         )
-
-        random_vectors = []
-        for i, ru in enumerate(random_units):
-            rs = scale_vector(ru, ALPHA, mu_norm)
-            random_vectors.append(rs)
-
-            raw_random_norm = float(ru.norm())
-            scaled_random_norm = float(rs.norm())
-            print(f"  random_{i+1}: unit_norm={raw_random_norm:.2f}, scaled_norm={scaled_random_norm:.2f}")
-
-            # Invariant check
-            assert torch.allclose(
-                rs.norm(), v_cand_distress.norm(), rtol=1e-5, atol=1e-6
-            ), "Random vector norm does not match candidate norm!"
-
-        print("\n  [Pairwise Random Vector Cosine Similarities]")
-        for i in range(len(random_vectors)):
-            for j in range(i + 1, len(random_vectors)):
-                cos_sim = float(torch.nn.functional.cosine_similarity(
-                    random_vectors[i].unsqueeze(0), random_vectors[j].unsqueeze(0)
-                ))
-                print(f"    cos(random_{i+1}, random_{j+1}) = {cos_sim:.4f}")
-
-        flush_gpu()
-
-        # ── Phase 4: Evaluate GSM8K ──────────────────────────────────────────────
-        print("\n╔══════════════════════════════════════════════════════════╗")
-        print("║   Phase 4 — GSM8K Evaluation (3 Conditions)             ║")
-        print("╚══════════════════════════════════════════════════════════╝\n")
-
-        conditions = [
-            {"name": "baseline", "vector_type": "baseline", "hook_fn": None, "metadata": {}},
-            {"name": "negative", "vector_type": "negative", "hook_fn": get_steering_pre_hook(v_neg_scaled), "metadata": {}},
-            {"name": "candidate_distress", "vector_type": "candidate_distress", "hook_fn": get_steering_pre_hook(v_cand_distress), "metadata": {}},
-            {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_pre_hook(v_cand_failure), "metadata": {}}
-        ]
-
-        for i, rv in enumerate(random_vectors):
-            metadata = {
-                "random_vector_id": i + 1,
-                "random_vector_seed": RANDOM_SEED + RANDOM_VECTOR_SEED_OFFSET + i,
-                "vector_norm": float(rv.norm()),
-                "candidate_cosine": float(torch.nn.functional.cosine_similarity(rv.unsqueeze(0), v_cand_distress.unsqueeze(0)).abs()),
-            }
-            conditions.append({
-                "name": f"random_{i+1}",
-                "vector_type": "random",
-                "hook_fn": get_steering_pre_hook(rv),
-                "metadata": metadata
-            })
-
 
         eval_tasks = [
             {"eval_set": "gsm8k", "items": GSM8K_QUESTIONS[:PILOT_EVAL_N] if PILOT_MODE else GSM8K_QUESTIONS, "is_gsm8k": True},
@@ -249,63 +190,133 @@ def main():
             {"eval_set": "failure_val", "items": FAILURE_VAL[:PILOT_EVAL_N] if PILOT_MODE else FAILURE_VAL, "is_gsm8k": False},
         ]
 
-        for cond in conditions:
-            cond_name = cond["name"]
-            print(f"\n  ── Condition: {cond_name} ──")
+        print("\n╔══════════════════════════════════════════════════════════╗")
+        print("║   Phase 4 — Evaluation                                  ║")
+        print("╚══════════════════════════════════════════════════════════╝\n")
 
-            for task in eval_tasks:
-                eval_set = task["eval_set"]
-                for i, item in enumerate(tqdm(task["items"], desc=f"  {cond_name} [{eval_set}]", leave=True)):
-                    if task["is_gsm8k"]:
-                        prompt = item["question"]
-                    else:
-                        prompt = item["baseline"]
+        # --- Baseline (alpha = 0.0) ---
+        print("  ── Condition: baseline (alpha=0.0) ──")
+        for task in eval_tasks:
+            eval_set = task["eval_set"]
+            for i, item in enumerate(tqdm(task["items"], desc=f"  baseline [{eval_set}]", leave=True)):
+                prompt = item["question"] if task["is_gsm8k"] else item["baseline"]
+                generated = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=None)
+                is_refusal = detect_refusal(generated)
+                is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
 
-                    generated = generate_response(
-                        model, tokenizer, prompt, steering_hook_fn=cond["hook_fn"]
-                    )
+                record = {
+                    "layer": target_layer,
+                    "alpha": 0.0,
+                    "eval_set": eval_set,
+                    "condition": "baseline",
+                    "vector_type": "baseline",
+                    "generated_text": generated,
+                    "length": len(generated),
+                    "is_refusal": is_refusal,
+                    "is_truncated": is_truncated,
+                }
+                
+                if task["is_gsm8k"]:
+                    extracted = extract_answer(generated)
+                    is_correct = extracted == item["answer"] if extracted is not None else False
+                    record.update({
+                        "question_id": item["id"],
+                        "ground_truth": item["answer"],
+                        "extracted_answer": extracted,
+                        "correct": is_correct,
+                        "is_format_compliant": extracted is not None,
+                    })
+                else:
+                    record.update({
+                        "question_id": i, "ground_truth": None, "extracted_answer": None,
+                        "correct": None, "is_format_compliant": None,
+                    })
+                    
+                records.append(record)
+                flush_gpu()
+        print("  ✓ baseline done.")
 
-                    is_refusal = detect_refusal(generated)
-                    is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
+        # --- Iterating over Alphas ---
+        for alpha in ALPHAS:
+            print(f"\n  ══════════════════════════════════════════════════════════")
+            print(f"    Evaluating Dose (Alpha) = {alpha}")
+            print(f"  ══════════════════════════════════════════════════════════")
+            
+            v_cand_distress = scale_vector(v_cand_raw, alpha, mu_norm)
+            v_cand_failure = scale_vector(v_failure_cand_raw, alpha, mu_norm)
+            v_neg_scaled = scale_vector(v_negative, alpha, mu_norm)
+            
+            random_vectors = []
+            for i, ru in enumerate(random_units):
+                rs = scale_vector(ru, alpha, mu_norm)
+                random_vectors.append(rs)
 
-                    record = {
-                    "layer":            target_layer,
-                    "eval_set":         eval_set,
-                        "condition":        cond_name,
-                        "vector_type":      cond["vector_type"],
-                        "random_vector_id": cond["metadata"].get("random_vector_id"),
-                        "random_vector_seed": cond["metadata"].get("random_vector_seed"),
-                        "vector_norm":      cond["metadata"].get("vector_norm"),
-                        "candidate_cosine": cond["metadata"].get("candidate_cosine"),
-                        "generated_text":   generated,
-                        "length":           len(generated),
-                        "is_refusal":       is_refusal,
-                        "is_truncated":     is_truncated,
-                    }
+            conditions = [
+                {"name": "negative", "vector_type": "negative", "hook_fn": get_steering_pre_hook(v_neg_scaled), "metadata": {}},
+                {"name": "candidate_distress", "vector_type": "candidate_distress", "hook_fn": get_steering_pre_hook(v_cand_distress), "metadata": {}},
+                {"name": "candidate_failure", "vector_type": "candidate_failure", "hook_fn": get_steering_pre_hook(v_cand_failure), "metadata": {}}
+            ]
+            for i, rv in enumerate(random_vectors):
+                metadata = {
+                    "random_vector_id": i + 1,
+                    "random_vector_seed": RANDOM_SEED + RANDOM_VECTOR_SEED_OFFSET + i,
+                    "vector_norm": float(rv.norm()),
+                    "candidate_cosine": float(torch.nn.functional.cosine_similarity(rv.unsqueeze(0), v_cand_distress.unsqueeze(0)).abs()),
+                }
+                conditions.append({
+                    "name": f"random_{i+1}",
+                    "vector_type": "random",
+                    "hook_fn": get_steering_pre_hook(rv),
+                    "metadata": metadata
+                })
 
-                    if task["is_gsm8k"]:
-                        extracted = extract_answer(generated)
-                        is_correct = extracted == item["answer"] if extracted is not None else False
-                        record.update({
-                            "question_id":      item["id"],
-                            "ground_truth":     item["answer"],
-                            "extracted_answer": extracted,
-                            "correct":          is_correct,
-                            "is_format_compliant": extracted is not None,
-                        })
-                    else:
-                        record.update({
-                            "question_id":      i,
-                            "ground_truth":     None,
-                            "extracted_answer": None,
-                            "correct":          None,
-                            "is_format_compliant": None,
-                        })
+            for cond in conditions:
+                cond_name = cond["name"]
+                print(f"\n  ── Condition: {cond_name} ──")
+                
+                for task in eval_tasks:
+                    eval_set = task["eval_set"]
+                    for i, item in enumerate(tqdm(task["items"], desc=f"  {cond_name} [{eval_set}]", leave=True)):
+                        prompt = item["question"] if task["is_gsm8k"] else item["baseline"]
+                        generated = generate_response(model, tokenizer, prompt, target_layer=target_layer, steering_hook_fn=cond["hook_fn"])
+                        is_refusal = detect_refusal(generated)
+                        is_truncated = len(generated) > (MAX_NEW_TOKENS * 3)
 
-                    records.append(record)
-                    flush_gpu()
-
-            print(f"  ✓ {cond_name} done.")
+                        record = {
+                            "layer": target_layer,
+                            "alpha": alpha,
+                            "eval_set": eval_set,
+                            "condition": cond_name,
+                            "vector_type": cond["vector_type"],
+                            "random_vector_id": cond["metadata"].get("random_vector_id"),
+                            "random_vector_seed": cond["metadata"].get("random_vector_seed"),
+                            "vector_norm": cond["metadata"].get("vector_norm"),
+                            "candidate_cosine": cond["metadata"].get("candidate_cosine"),
+                            "generated_text": generated,
+                            "length": len(generated),
+                            "is_refusal": is_refusal,
+                            "is_truncated": is_truncated,
+                        }
+                        
+                        if task["is_gsm8k"]:
+                            extracted = extract_answer(generated)
+                            is_correct = extracted == item["answer"] if extracted is not None else False
+                            record.update({
+                                "question_id": item["id"],
+                                "ground_truth": item["answer"],
+                                "extracted_answer": extracted,
+                                "correct": is_correct,
+                                "is_format_compliant": extracted is not None,
+                            })
+                        else:
+                            record.update({
+                                "question_id": i, "ground_truth": None, "extracted_answer": None,
+                                "correct": None, "is_format_compliant": None,
+                            })
+                            
+                        records.append(record)
+                        flush_gpu()
+                print(f"  ✓ {cond_name} done.")
 
     # ── Phase 5: Log & summarise ─────────────────────────────────────────────
     print("\n╔══════════════════════════════════════════════════════════╗")
@@ -326,7 +337,7 @@ def main():
 
     # Summary table.
     summary = (
-        df_gsm8k.groupby(["layer", "condition"])
+        df_gsm8k.groupby(["layer", "alpha", "condition"])
         .agg(
             Accuracy=("correct", "mean"),
             Avg_Length=("length", "mean"),
@@ -346,42 +357,32 @@ def main():
     for layer in TARGET_LAYERS:
         print(f"\n  [Layer {layer}]")
         try:
-            baseline_acc = summary.loc[(layer, "baseline"), "Accuracy"]
-            candidate_distress_acc = summary.loc[(layer, "candidate_distress"), "Accuracy"]
-            candidate_failure_acc = summary.loc[(layer, "candidate_failure"), "Accuracy"]
-            random_accs = [summary.loc[(layer, f"random_{i+1}"), "Accuracy"] for i in range(NUM_RANDOM_VECTORS)]
-            
-            distress_delta = candidate_distress_acc - baseline_acc
-            failure_delta = candidate_failure_acc - baseline_acc
-            random_deltas = [acc - baseline_acc for acc in random_accs]
-            
-            print(f"    Candidate Distress Accuracy Delta: {distress_delta:+.1%}")
-            print(f"    Candidate Failure Accuracy Delta:  {failure_delta:+.1%}")
-            for i, rd in enumerate(random_deltas):
-                print(f"    Random {i+1} Accuracy Delta: {rd:+.1%}")
-                
-            random_mean_effect = sum(random_deltas) / len(random_deltas)
-            print(f"    Empirical Random Mean Effect: {random_mean_effect:+.1%}")
+            baseline_acc = summary.loc[(layer, 0.0, "baseline"), "Accuracy"]
         except KeyError:
-            print("    Data missing for this layer.")
-        df_val.groupby(["layer", "eval_set", "condition"])
-    print("\n╔══════════════════════════════════════════════════════════╗")
-    print("║   Phase 6 — Statistical Analysis                        ║")
-    print("╚══════════════════════════════════════════════════════════╝\n")
-
-    comparisons = [
-        {"condition_a": "candidate_distress", "condition_b": "baseline"},
-        {"condition_a": "candidate_distress", "condition_b": "negative"},
-        {"condition_a": "candidate_distress", "condition_b": "candidate_failure"},
-    ]
-    for i in range(NUM_RANDOM_VECTORS):
-        comparisons.append({"condition_a": "candidate_distress", "condition_b": f"random_{i+1}"})
-        
-    comparisons.extend([
-        {"condition_a": "candidate_failure", "condition_b": "baseline"},
-        {"condition_a": "candidate_failure", "condition_b": "negative"},
-    ])
-
+            print("    Data missing for baseline.")
+            continue
+            
+        for alpha in ALPHAS:
+            print(f"\n    -- Alpha {alpha} --")
+            try:
+                candidate_distress_acc = summary.loc[(layer, alpha, "candidate_distress"), "Accuracy"]
+                candidate_failure_acc = summary.loc[(layer, alpha, "candidate_failure"), "Accuracy"]
+                random_accs = [summary.loc[(layer, alpha, f"random_{i+1}"), "Accuracy"] for i in range(NUM_RANDOM_VECTORS)]
+                
+                distress_delta = candidate_distress_acc - baseline_acc
+                failure_delta = candidate_failure_acc - baseline_acc
+                random_deltas = [acc - baseline_acc for acc in random_accs]
+                
+                print(f"      Candidate Distress Accuracy Delta: {distress_delta:+.1%}")
+                print(f"      Candidate Failure Accuracy Delta:  {failure_delta:+.1%}")
+                for i, rd in enumerate(random_deltas):
+                    print(f"      Random {i+1} Accuracy Delta: {rd:+.1%}")
+                    
+                random_mean_effect = sum(random_deltas) / len(random_deltas)
+                print(f"      Empirical Random Mean Effect: {random_mean_effect:+.1%}")
+            except KeyError:
+                print("      Data missing for this alpha.")
+                
     print("  Running paired statistical tests on GSM8K...")
     if PILOT_MODE:
         print("  Skipping statistical tests because PILOT_MODE is on.")

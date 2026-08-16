@@ -9,11 +9,11 @@ MODEL_ID: str = "google/gemma-3-12b-it"
 
 # ─── Representation Engineering ──────────────────────────────────────────────
 TARGET_LAYERS: list[int] = [12, 15, 18, 21]
-ALPHA: float = 0.1              # Steering magnitude scalar
+ALPHAS: list[float] = [0.05, 0.10, 0.25, 0.50]
 
 # ─── Pilot Mode ──────────────────────────────────────────────────────────────
 PILOT_MODE: bool = True
-PILOT_EVAL_N: int = 5
+PILOT_EVAL_N: int = 10
 
 # ─── Data Split ──────────────────────────────────────────────────────────────
 TRAIN_SPLIT_RATIO: float = 0.8
