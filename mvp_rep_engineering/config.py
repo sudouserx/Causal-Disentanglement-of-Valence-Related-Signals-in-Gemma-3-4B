@@ -12,7 +12,7 @@ TARGET_LAYER: int = 15          # Middle-late layer for semantic concept probing
 ALPHA: float = 0.5              # Steering magnitude scalar
 
 # ─── Generation ──────────────────────────────────────────────────────────────
-MAX_NEW_TOKENS: int = 64        # Keep generations short to save VRAM on T4
+MAX_NEW_TOKENS: int = 2048
 
 # ─── Refusal detection tokens ───────────────────────────────────────────────
 REFUSAL_TOKENS: list[str] = [
