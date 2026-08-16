@@ -80,5 +80,11 @@ def scale_vector(
     Tensor (D,)
         Scaled steering vector ready for injection.
     """
-    v_hat = v / v.norm()
+    norm = v.norm()
+    if norm < 1e-8:
+        raise ValueError(
+            "scale_vector received a near-zero vector (norm={:.2e}). "
+            "The distress and negative directions may be collinear.".format(float(norm))
+        )
+    v_hat = v / norm
     return v_hat * alpha * mu_norm

@@ -12,7 +12,7 @@ All hooks are designed for `Gemma3DecoderLayer`, whose forward signature is:
     input  = (hidden_states, attention_mask, position_ids, …)
 """
 
-from typing import Any
+from typing import Any, Callable
 
 import torch
 from torch import nn, Tensor
@@ -22,7 +22,7 @@ from torch import nn, Tensor
 
 def get_extraction_hook(
     storage: list[Tensor],
-) -> callable:
+) -> Callable:
     """Return a forward hook that appends the last-token activation to *storage*.
 
     Parameters
@@ -51,7 +51,7 @@ def get_extraction_hook(
 
 def get_steering_pre_hook(
     steering_vector: Tensor,
-) -> callable:
+) -> Callable:
     """Return a forward **pre-hook** that additively steers hidden states.
 
     The vector is injected only when ``seq_len == 1`` (auto-regressive

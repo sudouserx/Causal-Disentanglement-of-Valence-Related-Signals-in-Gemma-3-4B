@@ -8,10 +8,10 @@ Functions:
 """
 
 import re
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
-from torch.utils.hooks import RemovableHook
+from torch.utils.hooks import RemovableHandle
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
 from config import MAX_NEW_TOKENS, TARGET_LAYER, REFUSAL_TOKENS
@@ -21,7 +21,7 @@ def generate_response(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizerBase,
     prompt: str,
-    steering_hook_fn: Optional[callable] = None,
+    steering_hook_fn: Optional[Callable] = None,
 ) -> str:
     """Generate text for a single prompt, optionally with a steering pre-hook.
 
@@ -56,7 +56,7 @@ def generate_response(
     input_len = inputs["input_ids"].shape[1]
 
     # Attach steering hook if provided.
-    handle: Optional[RemovableHook] = None
+    handle: Optional[RemovableHandle] = None
     target_module = model.model.layers[TARGET_LAYER]
     if steering_hook_fn is not None:
         handle = target_module.register_forward_pre_hook(steering_hook_fn)

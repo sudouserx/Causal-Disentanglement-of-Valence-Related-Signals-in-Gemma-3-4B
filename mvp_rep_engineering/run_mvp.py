@@ -3,7 +3,7 @@
 run_mvp.py — Main orchestration script for the Causal Disentanglement MVP.
 
 Pipeline:
-  Phase 1  ─ Load model (8-bit on T4).
+  Phase 1  ─ Load model (4-bit NF4 on T4).
   Phase 2  ─ Extract activations for baseline, distress, and negative prompts.
   Phase 3  ─ Compute vectors: mean-diff, residualise, scale.
   Phase 4  ─ Evaluate GSM8K under 3 conditions (baseline / negative / distress).
@@ -79,8 +79,12 @@ def main():
     results_dir.mkdir(exist_ok=True)
 
     # ── Phase 1: Load model ──────────────────────────────────────────────────
+    if not torch.cuda.is_available():
+        print("ERROR: No CUDA GPU detected. This pipeline requires a GPU (T4 or better).")
+        sys.exit(1)
+
     print("\n╔══════════════════════════════════════════════════════════╗")
-    print("║   Phase 1 — Loading Model (8-bit)                      ║")
+    print("║   Phase 1 — Loading Model (4-bit NF4)                  ║")
     print("╚══════════════════════════════════════════════════════════╝\n")
     model, tokenizer = load_model_and_tokenizer()
     flush_gpu()
