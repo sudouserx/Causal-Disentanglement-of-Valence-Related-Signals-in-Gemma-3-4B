@@ -23,7 +23,7 @@ DATA_SPLIT_SEED: int = 42
 MAX_NEW_TOKENS: int = 256
 
 # ─── Random Controls ─────────────────────────────────────────────────────────
-NUM_RANDOM_VECTORS: int = 3
+NUM_RANDOM_VECTORS: int = 2
 RANDOM_SEED: int = 42
 RANDOM_VECTOR_SEED_OFFSET: int = 1
 RANDOM_VECTOR_MAX_COSINE: float = 0.2
