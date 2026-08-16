@@ -29,6 +29,8 @@ from model_utils import load_model_and_tokenizer, get_decoder_layers
 from vector_math import calculate_mean_diff, residualize, scale_vector, generate_random_control_vectors
 from steering import get_extraction_hook, get_steering_pre_hook
 from evaluation import generate_response, extract_answer, detect_refusal
+import config
+from statistics import compute_statistics, generate_markdown_summary
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -326,6 +328,38 @@ def main():
     print(f"    Mean Effect: {random_mean_effect:+.1%}")
     print(f"    Min Effect:  {random_min_effect:+.1%}")
     print(f"    Max Effect:  {random_max_effect:+.1%}")
+
+    print("\n╔══════════════════════════════════════════════════════════╗")
+    print("║   Phase 6 — Statistical Analysis                        ║")
+    print("╚══════════════════════════════════════════════════════════╝\n")
+
+    comparisons = [
+        {"condition_a": "candidate_distress", "condition_b": "baseline"},
+        {"condition_a": "candidate_distress", "condition_b": "negative"},
+        {"condition_a": "candidate_distress", "condition_b": "candidate_failure"},
+    ]
+    for i in range(NUM_RANDOM_VECTORS):
+        comparisons.append({"condition_a": "candidate_distress", "condition_b": f"random_{i+1}"})
+        
+    comparisons.extend([
+        {"condition_a": "candidate_failure", "condition_b": "baseline"},
+        {"condition_a": "candidate_failure", "condition_b": "negative"},
+    ])
+
+    print("  Running paired statistical tests...")
+    stat_results = compute_statistics(df, comparisons, config)
+    
+    stat_json_path = results_dir / "statistical_results.json"
+    with open(stat_json_path, "w") as f:
+        import json
+        json.dump(stat_results, f, indent=2)
+    print(f"  Statistical results saved → {stat_json_path}")
+    
+    stat_md_path = results_dir / "statistical_summary.md"
+    md_summary = generate_markdown_summary(stat_results)
+    with open(stat_md_path, "w") as f:
+        f.write(md_summary)
+    print(f"  Statistical summary saved → {stat_md_path}\n")
 
     elapsed = time.time() - t0
     print(f"\n  ⏱  Total wall time: {elapsed / 60:.1f} min")

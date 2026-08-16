@@ -36,3 +36,10 @@ REFUSAL_PATTERNS: list[str] = [
     r"\bnot able to (?:help|assist|provide|answer|complete)\b",
     r"\bi do not have the ability to\b",
 ]
+
+# ─── Statistics ──────────────────────────────────────────────────────────────
+N_PERMUTATIONS: int = 10_000
+N_BOOTSTRAPS: int = 10_000
+BOOTSTRAP_CONFIDENCE: float = 0.95
+STATISTICS_SEED_OFFSET: int = 200
+PRIMARY_ALPHA: float = 0.05
