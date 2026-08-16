@@ -18,7 +18,7 @@ from config import MODEL_ID
 
 
 def load_model_and_tokenizer() -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
-    """Load Gemma-3-4B-IT in 4-bit (NF4) precision.
+    """Load Gemma-3-12B-IT in 4-bit (NF4) precision.
 
     Returns
     -------

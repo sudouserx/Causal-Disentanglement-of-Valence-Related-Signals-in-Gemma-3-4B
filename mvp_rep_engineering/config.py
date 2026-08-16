@@ -5,7 +5,7 @@ All tuneable knobs live here so that `run_mvp.py` stays clean.
 """
 
 # ─── Model ────────────────────────────────────────────────────────────────────
-MODEL_ID: str = "google/gemma-3-4b-it"
+MODEL_ID: str = "google/gemma-3-12b-it"
 
 # ─── Representation Engineering ──────────────────────────────────────────────
 TARGET_LAYER: int = 15          # Middle-late layer for semantic concept probing
